@@ -23,7 +23,7 @@ export interface ItemProps {
   style?: React.CSSProperties
 }
 
-export const Menu = React.forwardRef<unknown, MenuProps>((props, ref) => {
+const Menu = React.forwardRef<unknown, MenuProps>((props, ref) => {
   const { getPrefixCls, prefixCls: pkgPrefixCls, compDefaultProps: userDefaultProps } = React.useContext(ConfigContext)
 
   // 属性需要合并一遍用户定义的默认属性
@@ -40,9 +40,12 @@ export const Menu = React.forwardRef<unknown, MenuProps>((props, ref) => {
   const prefixCls = getPrefixCls!(pkgPrefixCls, 'dropdown-menu', customPrefixcls)
 
   const cloneItem = (item: React.ReactElement, index?: number) => {
+    if (!React.isValidElement(item)) {
+      return item
+    }
     const key = item.key || index
     const selected = selectable && String(selectedKey) === String(key)
-    return React.cloneElement(item, { key, selected, defaultKey: key })
+    return React.cloneElement(item as any, { key, selected, defaultKey: key })
   }
 
   return (
@@ -52,7 +55,7 @@ export const Menu = React.forwardRef<unknown, MenuProps>((props, ref) => {
   )
 })
 
-export const Item: React.FC<ItemProps> = (props) => {
+const Item: React.FC<ItemProps> = (props) => {
   const { getPrefixCls, prefixCls: pkgPrefixCls, compDefaultProps: userDefaultProps } = React.useContext(ConfigContext)
 
   // 属性需要合并一遍用户定义的默认属性
@@ -103,3 +106,8 @@ export const Item: React.FC<ItemProps> = (props) => {
     </li>
   )
 }
+
+Menu.displayName = 'DropdownMenu'
+Item.displayName = 'DropdownMenuItem'
+
+export { Menu, Item }

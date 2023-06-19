@@ -19,6 +19,8 @@ export interface DropDownProps extends PopperProps {
   defaultKey?: string
   selectedKey?: string
   selectable?: boolean
+  className?: string
+  style?: Record<string, unknown>
   children?: React.ReactNode
   onItemClick?: (key: string) => void
   menu: React.ReactElement | Array<MenuItem>
@@ -70,7 +72,9 @@ const Dropdown = React.forwardRef<unknown, DropDownProps>((props, ref) => {
   )
 
   React.useEffect(() => {
-    setSelectedKey(props.selectedKey)
+    if (typeof props.selectedKey !== 'undefined') {
+      setSelectedKey(props.selectedKey)
+    }
   }, [props.selectedKey])
 
   const menuSelectable = menu.props?.selectable === undefined ? selectable : menu.props?.selectable
@@ -93,14 +97,9 @@ const Dropdown = React.forwardRef<unknown, DropDownProps>((props, ref) => {
     onClick: handleItemClick,
     selectable: menuSelectable,
   })
+
   const menuElement = isMenu ? (
-    Array.isArray(menu.props?.children) ? (
-      cloneObj
-    ) : (
-      <ul className={`${prefixCls}-menu`} onClick={handleItemClick} role="menu">
-        {menu.props.children}
-      </ul>
-    )
+    cloneObj
   ) : (
     <ul className={`${prefixCls}-menu`} onClick={handleItemClick} role="menu">
       {menu.map(({ key: itemKey, label, href, danger, divided, disabled }: MenuItem) => {

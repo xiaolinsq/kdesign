@@ -16,7 +16,6 @@ import {
   getDataCheckededStateStrictly,
   getAllChildKeys,
   getPos,
-  getSelected,
   calcDropPosition,
 } from './utils/treeUtils'
 import {
@@ -53,10 +52,11 @@ export interface TreeProps {
   virtual?: boolean
   scrollToKey?: string
   selectedKeys?: string[]
+  notFoundContent?: ReactNode
   loadData?: () => void
   onCheck?: (checkedKeys: string[], { checked, node, event, halfCheckedKeys }: any) => void
   onExpand?: (expandedKeys: string[], { expanded, node }: any) => void
-  onSelect?: ({ checked, node, event }: any) => void
+  onSelect?: (keys: string[], { checked, node, event }: any) => void
   onDragStart?: ({ event, node }: any) => void
   onDragOver?: ({ event, node }: any) => void
   onDragLeave?: ({ event, node }: any) => void
@@ -67,6 +67,10 @@ export interface TreeProps {
   setTreeNodeStyle?: (node: any) => Map<string, string>
   estimatedItemSize?: number
   expandOnClickNode?: boolean
+  onlyExpandOnClickIcon?: boolean
+  showIcon?: boolean
+  style?: React.CSSProperties
+  className?: string
 }
 
 export type TreeNodeData = {
@@ -135,15 +139,19 @@ const InternalTree = React.forwardRef((props: TreeProps, ref: any): React.Functi
     setTreeNodeClassName = () => '',
     estimatedItemSize: innerEstimatedItemSize,
     style,
+    className,
     filterTreeNode,
     filterValue,
     expandOnClickNode,
+    onlyExpandOnClickIcon = false,
     loadData,
+    notFoundContent,
+    ...others
   } = TreeProps
 
   const treePrefixCls = getPrefixCls!(prefixCls, 'tree', customPrefixcls) // 树样式前缀
   const treeNodePrefixCls = getPrefixCls!(prefixCls, 'tree-node', customPrefixcls) // 树节点样式前缀
-  const treeNodeClassName = classNames({
+  const treeNodeClassName = classNames(className, {
     [`${treePrefixCls}`]: true,
   })
   const treeRootClassName = `${treePrefixCls}-root`
@@ -170,7 +178,7 @@ const InternalTree = React.forwardRef((props: TreeProps, ref: any): React.Functi
   const [loadingKeys, setLoadingKeys] = React.useState<Set<string>>(new Set())
   const [searchExpandedKeys, setSearchExpandedKeys] = React.useState<Array<string>>([])
 
-  const isSearching = React.useMemo(() => typeof filterTreeNode === 'function' && filterValue, [filterValue])
+  const isSearching = React.useMemo(() => typeof filterTreeNode === 'function' && !!filterValue, [filterValue])
 
   useEffect(() => {
     setSearchExpandedKeys([])
@@ -444,9 +452,10 @@ const InternalTree = React.forwardRef((props: TreeProps, ref: any): React.Functi
   }, [checkedKeys, setCheckedKeys])
 
   return (
-    <div className={treeNodeClassName} style={style} ref={scrollRef} onScroll={handleScroll}>
+    <div className={treeNodeClassName} style={style} ref={scrollRef} onScroll={handleScroll} {...others}>
       <div ref={plantomRef as any} className={`${treePrefixCls}-plantom`}></div>
       <div className={treeRootClassName} ref={listRef as any}>
+        {!visibleData?.length && notFoundContent}
         {visibleData &&
           visibleData.map((item: any) => {
             const checked = getChecked(checkedKeys, item.key)
@@ -462,10 +471,11 @@ const InternalTree = React.forwardRef((props: TreeProps, ref: any): React.Functi
             item.onDrop = handleDrop
             item.onSelect = handleSelect
             item.checked = checked
-            item.selected = getSelected(
-              Array.isArray(selectedKeys) && selectedKeys[0] ? [selectedKeys[0]] : selectedKeys,
-              item.key,
-            )
+            item.selected = checkable
+              ? false
+              : Array.isArray(selectedKeys)
+              ? selectedKeys?.[0] === item.key
+              : selectedKeys === item.key
             item.indeterminate = indeterminate
             item.disabled = getDisabled(disabled, item.disabled)
             item.showIcon = showIcon || false
@@ -482,6 +492,7 @@ const InternalTree = React.forwardRef((props: TreeProps, ref: any): React.Functi
             item.dragOver = dragOverNodeKey === item.key && dropPosition === 0
             item.dropPosition = dropPosition
             item.expandOnClickNode = expandOnClickNode
+            item.onlyExpandOnClickIcon = onlyExpandOnClickIcon
             item.loading = loadingKeys.has(item.key) && !loadedKeys.has(item.key)
             item.loadData = loadData
             return <TreeNode {...item} key={item.key} ref={treeNodeRef} />

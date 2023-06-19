@@ -57,6 +57,16 @@ const compDefaultProps = {
   CollapsePanel: {
     disabled: false,
   },
+  ColorPicker: {
+    borderType: 'bordered',
+    defaultOpen: false,
+    functionalColorName: '#themeColor',
+    switchName: { name: '跟随主题色', internationalName: 'followFunctionalColor' },
+    placeholder: '#',
+    showColorTransfer: true,
+    showPresetColor: true,
+    showColorPickerBox: { showBox: false, showHue: false, showOpacity: false },
+  },
   Checkbox: {
     defaultChecked: false,
     checkboxType: 'default',
@@ -370,6 +380,7 @@ const compDefaultProps = {
     viewMode: 0,
     aspectRatio: NaN,
     okText: '确认裁剪',
+    autoCropArea: 0.5,
   },
   Anchor: {
     type: 'bookmarks',
@@ -412,6 +423,22 @@ const compDefaultProps = {
   Link: {
     size: 'middle',
     underscore: false,
+  },
+  TreeSelect: {
+    size: 'middle',
+    borderType: 'underline',
+    mode: 'single',
+    defaultOpen: false,
+    showArrow: true,
+    placeholder: '请输入需要搜索的内容',
+    optionLabelProp: 'title',
+    treeNodeFilterProp: 'title',
+    treeExpandOnClickNode: true,
+    showSearch: true,
+    switcherIcon: function () {
+      return <Icon type="arrow-right-solid" />
+    },
+    expandOnClickNode: false,
   },
 }
 

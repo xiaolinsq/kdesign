@@ -27,6 +27,7 @@ interface ClearableInputProps {
   addonAfter?: React.ReactNode
   numberMark?: React.ReactNode
   inputCount?: React.ReactNode
+  status?: 'error'
 }
 const ClearableInput: React.FC<ClearableInputProps> = (props) => {
   const {
@@ -49,6 +50,7 @@ const ClearableInput: React.FC<ClearableInputProps> = (props) => {
     numberMark,
     inputCount,
     count,
+    status,
   } = props
 
   const [isMouseEnter, setIsMouseEnter] = useState<boolean>(false)
@@ -59,6 +61,11 @@ const ClearableInput: React.FC<ClearableInputProps> = (props) => {
 
   const mouseLeaveHandle: React.MouseEventHandler<HTMLDivElement> = () => {
     setIsMouseEnter(false)
+  }
+
+  const mouseDownHandle: React.MouseEventHandler<HTMLDivElement> = (e) => {
+    e.stopPropagation()
+    e.preventDefault()
   }
 
   const renderClearIcon = () => {
@@ -73,19 +80,18 @@ const ClearableInput: React.FC<ClearableInputProps> = (props) => {
       [`${prefixCls}-clear-icon-rightSpace`]: suffix,
     })
     return (
-      <span onClick={handleReset} className={clearIconclasses}>
+      <span onMouseDown={mouseDownHandle} onClick={handleReset} className={clearIconclasses}>
         {typeof allowClear === 'boolean' ? <Icon type="close-solid" /> : allowClear}
       </span>
     )
   }
 
   const renderSuffix = () => {
-    if (suffix || (!disabled && !!allowClear) || inputCount) {
+    if (suffix || inputCount) {
       return (
-        <span className={`${prefixCls}-suffix`}>
-          {renderClearIcon()}
+        <span className={`${prefixCls}-suffix`} onMouseDown={mouseDownHandle}>
           {inputCount && <span style={{ marginRight: suffix ? 9 : 0 }}>{inputCount}</span>}
-          <span>{suffix}</span>
+          {suffix}
         </span>
       )
     }
@@ -97,15 +103,20 @@ const ClearableInput: React.FC<ClearableInputProps> = (props) => {
       return originElement
     }
     const suffixNode = renderSuffix()
-    const prefixNode = prefix ? <span className={`${prefixCls}-prefix`}>{prefix}</span> : null
+    const prefixNode = prefix ? (
+      <span className={`${prefixCls}-prefix`} onMouseDown={mouseDownHandle}>
+        {prefix}
+      </span>
+    ) : null
     const inputWrapperClasses = classNames(
       {
         [`${prefixCls}-wrapper`]: true,
         [`${prefixCls}-wrapper-focused`]: focused && !disabled,
-        [`${prefixCls}-wrapper-disabled`]: disabled,
         [`${prefixCls}-wrapper-size-${size}`]: size,
         [`${prefixCls}-wrapper-borderless`]: borderType === 'none',
         [`${prefixCls}-wrapper-underline`]: borderType === 'underline',
+        [`${prefixCls}-error`]: status === 'error',
+        [`${prefixCls}-wrapper-disabled`]: disabled,
       },
       { [className!]: className && !addonBefore && !addonAfter },
     )
@@ -118,6 +129,7 @@ const ClearableInput: React.FC<ClearableInputProps> = (props) => {
       >
         {prefixNode}
         {React.cloneElement(originElement, { style: null })}
+        {renderClearIcon()}
         {suffixNode}
       </span>
     )
@@ -130,6 +142,7 @@ const ClearableInput: React.FC<ClearableInputProps> = (props) => {
     const addonClassName = classNames(`${prefixCls}-group-addon`, {
       [`${prefixCls}-group-addon-borderless`]: borderType === 'none',
       [`${prefixCls}-group-addon-underline`]: borderType === 'underline',
+      [`${prefixCls}-error`]: status === 'error',
       [`${prefixCls}-group-addon-disabled`]: disabled,
     })
     const addonBeforeNode = addonBefore ? <span className={addonClassName}>{addonBefore}</span> : null
