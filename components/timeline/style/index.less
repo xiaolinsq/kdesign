@@ -13,6 +13,7 @@
   overflow: hidden;
   list-style: none;
 
+
   .@{timeline-item-prefix-cls} {
     .reset-component;
     position: relative;
@@ -84,6 +85,8 @@
       margin: 0 0 0 calc(2 * (@timeline-dot-size - @timeline-width) + @timeline-gap);
       word-break: break-word;
       color: @timeline-content-color-text;
+      max-width: @timeline-content-max-width;
+      min-width: @timeline-content-min-width;
 
       > * {
         margin: 0;
@@ -241,7 +244,7 @@
   &.pending .@{timeline-item-prefix-cls}.last .@{timeline-item-prefix-cls}-tail {
     display: block;
     height: calc(100% - 14px);
-    border-left: 2px dotted @timeline-line-color;
+    border-left: 1px dotted @timeline-line-color;
   }
 
   &.reverse .@{timeline-item-prefix-cls}.last .@{timeline-item-prefix-cls}-tail {
@@ -250,10 +253,9 @@
 
   &.reverse .@{timeline-item-prefix-cls}.pending {
     .@{timeline-item-prefix-cls}-tail {
-      top: 15px;
       display: block;
       height: calc(100% - 15px);
-      border-left: 2px dotted @timeline-line-color;
+      border-left: 1px dotted @timeline-line-color;
     }
     .@{timeline-item-prefix-cls}-content {
       min-height: 48px;

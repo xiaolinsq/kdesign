@@ -91,7 +91,7 @@ describe('Upload', () => {
 
   // 7. test beforeUpload transformFile onChange can be called
   it('test callback', async () => {
-    let fileList = [] as any
+    const fileList = [] as any
     const transformFileMock = jest.fn()
     const beforeUploadMock = jest.fn(() => {
       return true
@@ -153,5 +153,33 @@ describe('Upload', () => {
     expect(wrapper.find('input').prop('multiple')).toBe(false)
     wrapper.setProps({ multiple: true })
     expect(wrapper.find('input').prop('multiple')).toBe(true)
+  })
+
+  it('onPreview', () => {
+    const onPreview = jest.fn()
+    const wrapper = mount(
+      <Upload {...defaultUploadProps} onPreview={onPreview}>
+        {uploadButton}
+      </Upload>,
+    )
+    wrapper.find('.kd-upload-text-list-item-name').at(0).simulate('click')
+    expect(onPreview).toHaveBeenCalled()
+    wrapper.find('.kd-upload-text-list-item-icon').at(0).simulate('click')
+    expect(onPreview).toHaveBeenCalledTimes(2)
+  })
+
+  it('onRemove', () => {
+    let value = { ...defaultFileList[0] }
+    const onRemove = jest.fn((v) => {
+      value = v
+    })
+    const wrapper = mount(
+      <Upload {...defaultUploadProps} onRemove={onRemove}>
+        {uploadButton}
+      </Upload>,
+    )
+    wrapper.find('.kd-upload-text-list-item-delete').at(0).simulate('click')
+    expect(onRemove).toHaveBeenCalled()
+    expect(value.status).toEqual('removed')
   })
 })

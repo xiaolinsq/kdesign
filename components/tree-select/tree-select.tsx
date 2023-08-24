@@ -89,6 +89,8 @@ const InternalTreeSelect: React.ForwardRefRenderFunction<ITreeSelectProps<TreeSe
     onSelect,
     onCheck,
     dropdownRender,
+    onlyExpandOnClickIcon,
+    listHeight,
   } = treeSelectProps
   const isMultiple = mode === 'multiple' // 是否多选
   const [initValue, setInitValue] = useMergedState(isMultiple ? [] : undefined, {
@@ -139,16 +141,20 @@ const InternalTreeSelect: React.ForwardRefRenderFunction<ITreeSelectProps<TreeSe
 
   useEffect(() => {
     const arr = []
-    if (isMultiple && initValue?.length) {
+    if (isMultiple) {
       for (let index = 0; index < initValue.length; index++) {
         const key = initValue[index]
         if (TreeMap.has(key)) {
           arr.push(TreeMap.get(key))
+        } else {
+          arr.push({ key, title: key })
         }
       }
     } else {
       if (TreeMap.has(initValue)) {
         arr.push(TreeMap.get(initValue))
+      } else {
+        typeof initValue !== undefined && arr.push({ key: initValue, title: initValue })
       }
     }
     setSelectTreeNodes(arr)
@@ -316,11 +322,12 @@ const InternalTreeSelect: React.ForwardRefRenderFunction<ITreeSelectProps<TreeSe
       icon: treeIcon,
       showIcon: showTreeIcon,
       switcherIcon,
-      onlyExpandOnClickIcon: true,
+      onlyExpandOnClickIcon: onlyExpandOnClickIcon,
       notFoundContent: renderNotContent(),
       filterTreeNode: defFilterTreeNode,
       onSelect: handleSelect,
       onExpand: handleExpand,
+      height: listHeight,
     }
 
     if (isMultiple) {
@@ -350,7 +357,7 @@ const InternalTreeSelect: React.ForwardRefRenderFunction<ITreeSelectProps<TreeSe
 
   // 渲染下拉列表框
   const renderContent = () => {
-    const dropDownStyle = Object.assign({ width: style?.width }, dropdownStyle)
+    const dropDownStyle = Object.assign({ width: style?.width, maxHeight: virtual ? 'unset' : '' }, dropdownStyle)
     return (
       <>
         {
@@ -525,7 +532,7 @@ const InternalTreeSelect: React.ForwardRefRenderFunction<ITreeSelectProps<TreeSe
 
   const popperProps = {
     ...treeSelectProps,
-    prefixCls: selectPrefixCls,
+    prefixCls: `${selectPrefixCls}-panel`,
     placement: 'bottomLeft',
     popperStyle: catchStyle(),
     defaultVisible: optionShow,

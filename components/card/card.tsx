@@ -24,9 +24,10 @@ export interface CardProps {
   bodyStyle?: React.CSSProperties
   actions?: Array<React.ReactNode>
   extra?: Array<React.ReactNode>
+  ref?: React.ForwardedRef<HTMLDivElement>
 }
 
-const Card: React.FC<CardProps> = (props) => {
+const Card: React.FC<CardProps> = React.forwardRef<HTMLDivElement, CardProps>((props, ref) => {
   const { getPrefixCls, prefixCls: pkgPrefixCls, compDefaultProps: userDefaultProps } = React.useContext(ConfigContext)
   // 属性需要合并一遍用户定义的默认属性
   const {
@@ -44,6 +45,7 @@ const Card: React.FC<CardProps> = (props) => {
     selectable,
     checkboxProps,
     prefixCls: customPrefixcls,
+    ...others
   } = getCompProps('Card', userDefaultProps, props)
 
   // className前缀
@@ -52,7 +54,7 @@ const Card: React.FC<CardProps> = (props) => {
   const cardClassName = classNames(prefixCls, { hoverable }, className)
 
   return (
-    <div className={cardClassName} style={style}>
+    <div ref={ref} className={cardClassName} style={style} {...others}>
       {title && !avatar && (
         <header className={`${prefixCls}-header`} style={headStyle}>
           {title}
@@ -78,7 +80,7 @@ const Card: React.FC<CardProps> = (props) => {
       {extra && <div className={`${prefixCls}-extra`}>{extra}</div>}
     </div>
   )
-}
+})
 
 Card.displayName = 'Card'
 

@@ -61,6 +61,7 @@ subtitle: 穿梭框
 |  | --kd-c-transfer-header-sizing-height | - | 36px |
 |  | --kd-c-transfer-search-sizing-height | - | 32px |
 |  | --kd-c-transfer-pagination-sizing-height | - | 36px |
+|  | --kd-c-transfer-list-sizing-width | - | 250px |
 | spacing | --kd-c-transfer-spacing-horizontal | - | 14px |
 | text | --kd-c-transfer-list-item-color-text-checked | --kd-g-color-theme | #5582f3 |
 |  | --kd-c-transfer-list-item-color-text-disabled | --kd-g-color-disabled | #b2b2b2 |

@@ -1,4 +1,13 @@
-import React, { useContext, useRef, useEffect, useState, useCallback, useLayoutEffect, useMemo } from 'react'
+import React, {
+  useContext,
+  useRef,
+  useEffect,
+  useState,
+  useCallback,
+  useLayoutEffect,
+  useMemo,
+  useImperativeHandle,
+} from 'react'
 import { useMergedState } from '../_utils/hooks'
 import isBoolean from 'lodash/isBoolean'
 import classNames from 'classnames'
@@ -41,7 +50,7 @@ const InternalSelect: React.ForwardRefRenderFunction<ISelectProps<SelectValue>> 
     children,
     options,
     placeholder,
-    dropdownStyle,
+    dropdownStyle = {},
     style,
     clearIcon,
     filterOption,
@@ -57,13 +66,14 @@ const InternalSelect: React.ForwardRefRenderFunction<ISelectProps<SelectValue>> 
     defaultValue,
   })
   const realChildren = Array.isArray(options) ? options : toArray(children) // options配置项和默认children
-  const innerRef = useRef<HTMLElement>()
-  const selectRef = (ref as any) || innerRef
+  const selectRef = useRef<any>()
   const searchRef = useRef<any>(null) // 搜索框ref
   const selectionRef = useRef<any>(null)
   const dropDownRef = useRef<any>(null)
   const multipleRef = useRef<any>({ selectedVal: isMultiple ? [] : null, selectMulOpts: [] }) // 多选ref已选中项
   const measureRef = useRef<HTMLSpanElement>(null)
+  const clearRef = useRef<HTMLSpanElement>(null)
+
   const [mulOptions, setMulOptions] = useState<any>([])
   const [singleVal, setSingleVal] = useState<any>('')
   const [optionShow, setOptionShow] = useState<boolean>(
@@ -74,6 +84,11 @@ const InternalSelect: React.ForwardRefRenderFunction<ISelectProps<SelectValue>> 
   const [searchValue, setSearchValue] = useState<any>('') // 搜索框定时器
   const [inputWidth, setInputWidth] = useState(INPUT_MIN_WIDTH) // 输入框宽度
   const [focusd, setFocusd] = useState(autoFocus)
+
+  const isShowSearch = useMemo(() => {
+    return isBoolean(showSearch) ? showSearch : isMultiple
+  }, [isMultiple, showSearch])
+
   const selectPrefixCls = getPrefixCls!(prefixCls, 'select', customPrefixcls)
   // 选择器样式
   const selectCls = classNames(selectPrefixCls, className, {
@@ -107,6 +122,7 @@ const InternalSelect: React.ForwardRefRenderFunction<ISelectProps<SelectValue>> 
     [`${selectPrefixCls}-borderless`]: borderType === 'none',
     [`${selectPrefixCls}-size-${size}`]: size,
     [`${selectPrefixCls}-wrapper`]: true,
+    [`${selectPrefixCls}-show-search`]: isShowSearch && focusd,
   })
 
   useEffect(() => {
@@ -123,18 +139,21 @@ const InternalSelect: React.ForwardRefRenderFunction<ISelectProps<SelectValue>> 
         if (realChildren?.length) {
           const arr: any = []
           ;(initValue as any[]).map((item: any) => {
-            const obj =
-              realChildren?.find((child: any) => {
-                if (child && child.props) {
-                  return child.props.value === item
-                } else {
-                  return child.value === item
-                }
-              }) || {}
-            if (options && options.length) {
-              arr.push({ value: obj?.value, label: obj?.label || obj?.value })
+            const obj = realChildren?.find((child: any) => {
+              if (child && child.props) {
+                return child.props.value === item
+              } else {
+                return child.value === item
+              }
+            })
+            if (obj) {
+              if (options && options.length) {
+                arr.push({ value: obj?.value, label: obj?.label || obj?.value })
+              } else {
+                arr.push({ value: obj.props?.value, label: obj.props?.children })
+              }
             } else {
-              arr.push({ value: obj.props?.value, label: obj.props?.children })
+              arr.push({ value: item, label: item })
             }
           })
           setMulOptions([...arr])
@@ -151,19 +170,21 @@ const InternalSelect: React.ForwardRefRenderFunction<ISelectProps<SelectValue>> 
     if (!isMultiple) {
       multipleRef.current.selectedVal = initValue // 默认选中值
       if (initValue !== undefined) {
-        const obj =
-          realChildren?.find((child: any) => {
-            if (child && child.props) {
-              return child.props?.value === initValue
-            } else {
-              return child?.value === initValue
-            }
-          }) || {}
-        if (options && options.length) {
-          setSingleVal(getOptionLabel(obj) || obj?.value)
+        const obj = realChildren?.find((child: any) => {
+          if (child && child.props) {
+            return child.props?.value === initValue
+          } else {
+            return child?.value === initValue
+          }
+        })
+        if (obj) {
+          if (options && options.length) {
+            setSingleVal(getOptionLabel(obj) || obj?.value)
+          } else {
+            setSingleVal(getOptionLabel(obj))
+          }
         } else {
-          // setSingleVal(obj.props?.children)
-          setSingleVal(getOptionLabel(obj))
+          setSingleVal(initValue)
         }
       } else {
         setSingleVal(undefined)
@@ -280,6 +301,8 @@ const InternalSelect: React.ForwardRefRenderFunction<ISelectProps<SelectValue>> 
       }) || {}
     if (isMultiple) {
       searchRef.current?.focus()
+    } else {
+      searchRef.current?.blur()
     }
     const optionsObj = obj.props ? obj.props : obj || {}
     if (value !== undefined) {
@@ -306,7 +329,9 @@ const InternalSelect: React.ForwardRefRenderFunction<ISelectProps<SelectValue>> 
         }
       } else {
         props.visible === undefined && setOptionShow(false)
-        onChange && onChange(labelInValue ? { value: key, label } : key, { ...optionsObj, value: key, label })
+        initValue !== key &&
+          onChange &&
+          onChange(labelInValue ? { value: key, label } : key, { ...optionsObj, value: key, label })
       }
       onSelect && onSelect(key)
       return
@@ -316,7 +341,9 @@ const InternalSelect: React.ForwardRefRenderFunction<ISelectProps<SelectValue>> 
       multipleRef.current.selectedVal = key
       setInitValue(key)
       props.visible === undefined && setOptionShow(false)
-      onChange && onChange(labelInValue ? { value: key, label } : key, { ...optionsObj, value: key, label })
+      initValue !== key &&
+        onChange &&
+        onChange(labelInValue ? { value: key, label } : key, { ...optionsObj, value: key, label })
     } else {
       const { selectedVal, selectMulOpts } = multipleRef.current
       if (selectedVal.includes(key)) {
@@ -422,7 +449,6 @@ const InternalSelect: React.ForwardRefRenderFunction<ISelectProps<SelectValue>> 
   // 渲染后缀图标
   const renderSuffix = () => {
     const { suffixIcon } = selectProps
-    const { selectedVal } = multipleRef.current
     // 选择器下拉icon样式
     const arrowIconCls = classNames({
       [`${selectPrefixCls}-icon-arrow`]: true,
@@ -432,14 +458,14 @@ const InternalSelect: React.ForwardRefRenderFunction<ISelectProps<SelectValue>> 
     })
 
     const iconShow =
-      allowClear && !disabled && ((isMultiple ? mulOptions.length > 0 : (selectedVal ?? '') !== '') || searchValue)
+      allowClear && !disabled && ((isMultiple ? mulOptions.length > 0 : (singleVal ?? '') !== '') || searchValue)
     const clearIconCls = classNames({
       [`${selectPrefixCls}-icon-clear`]: true,
     })
     return (
       <>
         {iconShow && (
-          <span onClick={handleReset} onMouseDown={(e) => e.preventDefault()} className={clearIconCls}>
+          <span onClick={handleReset} onMouseDown={(e) => e.preventDefault()} className={clearIconCls} ref={clearRef}>
             {clearIcon || <Icon type="close-solid" />}
           </span>
         )}
@@ -504,10 +530,6 @@ const InternalSelect: React.ForwardRefRenderFunction<ISelectProps<SelectValue>> 
     return filledOptions?.length === 0 && <div className={emptyListCls}>{emptyContent}</div>
   }
 
-  const isShowSearch = useMemo(() => {
-    return isBoolean(showSearch) ? showSearch : isMultiple
-  }, [isMultiple, showSearch])
-
   useEffect(() => {
     if (isShowSearch && autoFocus && !disabled) {
       searchRef.current?.focus()
@@ -550,7 +572,6 @@ const InternalSelect: React.ForwardRefRenderFunction<ISelectProps<SelectValue>> 
       maxHeight: listHeight || '300px',
     }
     // 下拉框style属性
-    const dropDownStyle = Object.assign({ width: style?.width }, dropdownStyle)
     const checkboxStyle = {
       height: '30px',
       background: 'none',
@@ -560,14 +581,14 @@ const InternalSelect: React.ForwardRefRenderFunction<ISelectProps<SelectValue>> 
     return (
       <>
         {
-          <div className={dropDownCls} style={dropDownStyle} ref={dropDownRef}>
+          <div className={dropDownCls} style={dropdownStyle} ref={dropDownRef}>
             {!dropdownRender && childrenToRender.length > 0 && dropRender(eleOptionList, heightStyle)}
             {/* 下拉列表为空 */}
             {renderNotContent()}
             {/* 拓展菜单 */}
             <div>{dropdownRender && dropdownRender(dropRender(childrenToRender, heightStyle))}</div>
             {/* 多选模式-----底部 */}
-            {isMultiple && (
+            {isMultiple && realChildren.length > 0 && (
               <div className={multipleFooterCls}>
                 <Checkbox
                   style={checkboxStyle}
@@ -578,7 +599,7 @@ const InternalSelect: React.ForwardRefRenderFunction<ISelectProps<SelectValue>> 
                   全选
                 </Checkbox>
                 <span className={`${selectPrefixCls}-multiple-footer-hadSelected`}>
-                  已选<span>{isMultiple ? selectedVal.length : 0}</span>项
+                  已选<span>{selectedVal.length}</span>项
                 </span>
               </div>
             )}
@@ -753,7 +774,32 @@ const InternalSelect: React.ForwardRefRenderFunction<ISelectProps<SelectValue>> 
       onDropdownVisibleChange && onDropdownVisibleChange(true)
     }
   }, [optionShow])
-  const [activeIndex, setActiveIndex] = useState(getActiveIndex(0))
+
+  useEffect(() => {
+    const fn = (e: MouseEvent) => {
+      e.stopPropagation()
+    }
+    clearRef.current?.addEventListener('mouseup', fn)
+    return () => {
+      clearRef.current?.removeEventListener('mouseup', fn)
+    }
+  }, [singleVal, mulOptions])
+
+  useImperativeHandle(ref as any, () => {
+    return {
+      select: selectRef.current,
+      focus: () => {
+        setFocusd(true)
+        searchRef.current?.focus()
+      },
+      blur: () => {
+        setFocusd(false)
+        searchRef.current?.blur()
+      },
+    }
+  })
+
+  const [activeIndex, setActiveIndex] = useState(isShowSearch ? getActiveIndex(0) : -1)
   const onInternalKeyDown: React.KeyboardEventHandler<HTMLSpanElement> = (e) => {
     const { which } = e
     // open
@@ -836,11 +882,21 @@ const InternalSelect: React.ForwardRefRenderFunction<ISelectProps<SelectValue>> 
   const catchStyle = () => {
     if (selectRef?.current) {
       const { width } = selectRef.current?.getBoundingClientRect()
-      return { width: dropdownStyle?.width || (width > 75 ? width : 75), zIndex: 1050, ...popperStyle }
+      return {
+        minWidth: width,
+        maxWidth: 600,
+        ...dropdownStyle,
+        width: dropdownStyle?.width || 'auto',
+        zIndex: 1050,
+        ...popperStyle,
+      }
     }
   }
 
   const handleVisibleChange = (visible: boolean) => {
+    if (!visible) {
+      setActiveIndex(isShowSearch ? getActiveIndex(0) : -1)
+    }
     if (visible !== optionShow) {
       props.visible === undefined && setOptionShow(visible)
       onVisibleChange && onVisibleChange(visible)

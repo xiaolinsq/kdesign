@@ -4,6 +4,7 @@ import ConfigContext from '../config-provider/ConfigContext'
 import { getCompProps } from '../_utils'
 import { Menu, Item } from './menu'
 import usePopper, { PopperProps } from '../_utils/usePopper'
+import { isFragment } from '../_utils/reactNode'
 
 type MenuItem = {
   key?: string
@@ -24,6 +25,7 @@ export interface DropDownProps extends PopperProps {
   children?: React.ReactNode
   onItemClick?: (key: string) => void
   menu: React.ReactElement | Array<MenuItem>
+  menuAnimation?: boolean
 }
 
 const findItem: (element: any) => any = (element) => {
@@ -49,22 +51,56 @@ const Dropdown = React.forwardRef<unknown, DropDownProps>((props, ref) => {
     onItemClick,
     defaultVisible,
     onVisibleChange,
+    trigger,
     prefixCls: customPrefixcls,
+    menuAnimation,
+    popperStyle,
   } = allProps
 
-  // className前缀
   const prefixCls = getPrefixCls!(pkgPrefixCls, 'dropdown', customPrefixcls)
-
+  const innerAnimation = typeof menuAnimation === 'boolean' ? menuAnimation : trigger !== 'contextMenu'
   const [visible, setVisible] = React.useState(!!props.visible || defaultVisible)
   React.useEffect(() => {
     setVisible(!!props.visible)
   }, [props.visible])
 
-  const child = React.cloneElement(React.Children.only(children), {
-    ref: children.ref || ref,
-    className: classNames(`${prefixCls}-trigger`, children.props.className, { disabled }),
-  })
+  const handleVisibleChange = (visible: boolean) => {
+    props.visible === undefined && setVisible(visible)
+    onVisibleChange && onVisibleChange(visible)
+  }
 
+  const child =
+    children && children?.type?.displayName === 'Input' ? (
+      <span className={classNames(`${prefixCls}-trigger`, `${prefixCls}-trigger-container`)} ref={ref as any}>
+        {trigger === 'focus'
+          ? React.cloneElement(React.Children.only(children), {
+              onFocus: (e: React.FocusEvent<HTMLInputElement, Element>) => {
+                children.props.onFocus && children.props.onFocus(e)
+                handleVisibleChange(true)
+              },
+              onBlur: (e: React.FocusEvent<HTMLInputElement, Element>) => {
+                children.props.onBlur && children.props.onBlur(e)
+                handleVisibleChange(false)
+              },
+            })
+          : children}
+      </span>
+    ) : (
+      React.cloneElement(React.isValidElement(children) && !isFragment(children) ? children : <span>{children}</span>, {
+        ref:
+          React.isValidElement(children) && !isFragment(children) && (children as any).ref
+            ? (children as any).ref
+            : ref,
+        className: classNames(
+          `${prefixCls}-trigger`,
+          React.isValidElement(children) &&
+            !isFragment(children) &&
+            children.props &&
+            (children.props as any).className,
+          { disabled },
+        ),
+      })
+    )
   const isMenu = menu.type === Menu
 
   const [selectedKey, setSelectedKey] = React.useState(
@@ -136,15 +172,11 @@ const Dropdown = React.forwardRef<unknown, DropDownProps>((props, ref) => {
     </ul>
   )
 
-  const handleVisibleChange = (visible: boolean) => {
-    props.visible === undefined && setVisible(visible)
-    onVisibleChange && onVisibleChange(visible)
-  }
-
   const popperProps = {
     ...allProps,
     visible,
     prefixCls,
+    popperStyle: innerAnimation ? popperStyle : { animation: 'none', ...popperStyle },
     onVisibleChange: handleVisibleChange,
   }
 

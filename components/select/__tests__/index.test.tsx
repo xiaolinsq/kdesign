@@ -167,6 +167,25 @@ describe('Select', () => {
     expect(value.length).toBe(3)
   })
 
+  it('onChange is not triggered when the singlle selector selects the same value', () => {
+    const onChange = jest.fn()
+    const { Option } = Select
+    const wrapper = mount(
+      <Select placeholder="请输入名称" onChange={onChange} value="apple" defaultOpen={true}>
+        <Option value="apple">苹果</Option>
+        <Option value="lemon">柠檬</Option>
+        <Option value="watermelon">西瓜</Option>
+      </Select>,
+    )
+    wrapper.find('.kd-select-item').at(0).simulate('click')
+    expect(onChange).not.toHaveBeenCalled()
+  })
+
+  it('When the drop-down item is 0, the Select All button is not displayed', () => {
+    const wrapper = mount(<Select placeholder="请输入名称" mode="multiple" defaultOpen={true}></Select>)
+    expect(wrapper.find('.kd-select-multiple-footer')).not.toHaveClassName('.kd-checkbox-input')
+  })
+
   // 8.config provider
   describe('8.config provider', () => {
     it('should config use config provider', () => {
@@ -197,8 +216,12 @@ describe('Select', () => {
   describe('9. ref test', () => {
     it('should get Demo element from ref', () => {
       const ref = React.createRef() as any
-      mount(<Select ref={ref}></Select>)
-      expect((ref.current as HTMLElement).classList.contains('kd-select')).toBe(true)
+      const onFocus = jest.fn()
+      const onBlur = jest.fn()
+      mount(<Select ref={ref} onBlur={onBlur} onFocus={onFocus}></Select>)
+      expect((ref.current?.select as HTMLElement).classList.contains('kd-select')).toBe(true)
+      expect(ref.current?.select?.focus).toBeTruthy()
+      expect(ref.current?.select?.blur).toBeTruthy()
     })
   })
 
@@ -375,8 +398,8 @@ describe('Select', () => {
 
     // labelInValue
     defaultOpenSingle.setProps({ labelInValue: true })
-    defaultOpenSingle.find('.kd-select-item').at(0).simulate('click')
-    expect(selectValue.value).toBe('apple')
+    defaultOpenSingle.find('.kd-select-item').at(1).simulate('click')
+    expect(selectValue.value).toBe('orange')
 
     defaultOpenMultiple.setProps({ labelInValue: true })
     defaultOpenMultiple.find('.kd-select-item').at(1).simulate('click')
