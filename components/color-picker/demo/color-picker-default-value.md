@@ -1,6 +1,6 @@
 ---
 title: 设置默认值
-order: 7
+order: 8
 ---
 
 可配置属性 defaultValue 设置颜色面板的默认值
@@ -10,8 +10,8 @@ import React from 'react'
 import ReactDOM from 'react-dom'
 import { ColorPicker } from '@kdcloudjs/kdesign'
 
-function Demo() {
-  const onChange = (inputValue) => {
+const Demo: React.FC = () => {
+  const onChange = (inputValue: string) => {
     console.log('color', inputValue)
   }
 

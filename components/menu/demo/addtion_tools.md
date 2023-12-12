@@ -7,8 +7,8 @@ order: 9
 import React from 'react'
 import ReactDOM from 'react-dom'
 import { Menu, Icon } from '@kdcloudjs/kdesign'
-function Demo() {
-  const [collapsed, setCollapsed] = React.useState(false)
+const Demo: React.FC = () => {
+  const [collapsed, setCollapsed] = React.useState<boolean>(false)
   const handleClickItem = (obj) => {
     console.log(obj)
   }
@@ -45,7 +45,7 @@ function Demo() {
 
   return (
     <>
-      <Menu name="Menu" style={menuStyle} onClick={handleClickItem} inlineIndent={24} collapsed={collapsed} additionalTools={additionTools()}>
+      <Menu style={menuStyle} onClick={handleClickItem} inlineIndent={24} collapsed={collapsed} additionalTools={additionTools()}>
         <Menu.Item key="1" name="MenuItem" disabled>
           标签一
         </Menu.Item>

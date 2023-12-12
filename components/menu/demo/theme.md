@@ -10,8 +10,8 @@ import React from 'react'
 import ReactDOM from 'react-dom'
 import { Menu, Switch } from '@kdcloudjs/kdesign'
 
-function Demo() {
-  const [isDark, setIsDark] = React.useState(true)
+const Demo: React.FC = () => {
+  const [isDark, setIsDark] = React.useState<boolean>(true)
 
   const btnStyle = {
     marginBottom: '10px',
@@ -31,7 +31,7 @@ function Demo() {
         checkedChildren="light"
         unCheckedChildren="dark"
       />
-      <Menu name="Menu" theme={!isDark && 'light'} style={menuStyle} inlineIndent={14} mode="inline">
+      <Menu theme={!isDark && 'light'} style={menuStyle} inlineIndent={14} mode="inline">
         <Menu.Item key="1" name="MenuItem">
           标签一
         </Menu.Item>

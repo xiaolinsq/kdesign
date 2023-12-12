@@ -8,7 +8,7 @@ import React from 'react'
 import ReactDOM from 'react-dom'
 import { Collapse } from '@kdcloudjs/kdesign'
 
-function Demo() {
+const Demo: React.FC = () => {
   const collapseRef = React.useRef()
   React.useEffect(() => {
     if (collapseRef.current)
@@ -18,7 +18,7 @@ function Demo() {
   const pStyle = { 'marginLeft': '12px' }
 
   return (
-    <Collapse name="Collapse" ref={collapseRef}>
+    <Collapse ref={collapseRef}>
       <Collapse.Panel
         header="我的行程"
         panelKey="panel_1"

@@ -7,10 +7,12 @@ order: 3
 import React from 'react'
 import ReactDOM from 'react-dom'
 import { Carousel } from '@kdcloudjs/kdesign'
+import type { DotPositionType } from '@kdcloudjs/kdesign'
 
-function Demo() {
+
+const Demo: React.FC = () => {
   const carouselRef = React.useRef()
-  const [dotPosition, setDotPosition] = React.useState('bottom')
+  const [dotPosition, setDotPosition] = React.useState<DotPositionType>('bottom')
   React.useEffect(() => {
     if (!carouselRef.current) return
     carouselRef.current.getRef().parentNode.style.display = 'flex'
@@ -29,7 +31,7 @@ function Demo() {
     <div style={{ display: 'flex', flexDirection: 'column', flex: '1' }}>
       <p>隐藏面板指示点</p>
       <br />
-      <Carousel name="Carousel" dotPosition={dotPosition} ref={carouselRef} dots={false} autoplay={true}>
+      <Carousel dotPosition={dotPosition} ref={carouselRef} dots={false} autoplay={true}>
         <div style={itemStyle}>
           <h3>1</h3>
         </div>
@@ -46,7 +48,7 @@ function Demo() {
       <br />
       <p>自定义面板指示点样式</p>
       <br />
-      <Carousel name="Carousel" dotPosition={dotPosition} ref={carouselRef} dots={dots} autoplay={true}>
+      <Carousel dotPosition={dotPosition} ref={carouselRef} dots={dots} autoplay={true}>
         <div style={itemStyle}>
           <h3>1</h3>
         </div>

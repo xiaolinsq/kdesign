@@ -19,7 +19,7 @@ import { toLowerCase } from './utils/convertLetters'
 import Color from 'color'
 import { ChromePicker } from 'react-color'
 import devWarning from '../_utils/devwarning'
-import useOnClickOutside from './utils/hooks/useOnClickOutside'
+import { useOnClickOutside } from '../_utils/hooks'
 
 const ColorPickerPanel: FC<IColorPickerPanelProps> = (props) => {
   const {
@@ -33,6 +33,7 @@ const ColorPickerPanel: FC<IColorPickerPanelProps> = (props) => {
     setColTypeArr,
     setCurrentColorType,
     onChange,
+    onVisibleChange,
     alpha,
     alphaNoVerifyVal,
     clickedColorIndex,
@@ -51,6 +52,8 @@ const ColorPickerPanel: FC<IColorPickerPanelProps> = (props) => {
     showColorPickerBox,
     showColorPickerPanel,
     value,
+    visible,
+    showPanel,
   } = props
   const panelInputRef = useRef<HTMLInputElement>(null)
   const panelClsRef = useRef<HTMLInputElement>(null)
@@ -66,10 +69,9 @@ const ColorPickerPanel: FC<IColorPickerPanelProps> = (props) => {
     [`${colorPickerPrefixCls}-panel-chrome-no-opacity`]: !showColorPickerBox?.showOpacity,
   })
   const panelFollowThemeCls = classNames(`${colorPickerPrefixCls}-panel-switch`)
-  const panelInputCls = classNames(`${colorPickerPrefixCls}-panel-input`, {
-    [`${colorPickerPrefixCls}-panel-input-no-recommend`]: !showPresetColor,
-  })
-  const transparentCls = classNames(`${colorPickerPrefixCls}-panel-transparent`)
+  const panelContainerCls = classNames(`${colorPickerPrefixCls}-panel-container`)
+  const panelInputCls = classNames(`${colorPickerPrefixCls}-panel-container-input`)
+  const transparentCls = classNames(`${colorPickerPrefixCls}-panel-container-transparent`)
   const colorDivContainerCls = classNames(`${colorPickerPrefixCls}-panel-colorDivContainer`, {
     [`${colorPickerPrefixCls}-panel-colorDivContainer-unset-color`]: presetColor?.length === 0,
   })
@@ -219,7 +221,10 @@ const ColorPickerPanel: FC<IColorPickerPanelProps> = (props) => {
   }
 
   useOnClickOutside([panelClsRef, inputRef], () => {
-    setShowPanel(false)
+    if (typeof visible === 'undefined') {
+      setShowPanel(false)
+    }
+    showPanel && onVisibleChange && onVisibleChange(false)
   })
 
   return (
@@ -241,7 +246,7 @@ const ColorPickerPanel: FC<IColorPickerPanelProps> = (props) => {
             </div>
           )}
           {showColorTransfer && (
-            <>
+            <div className={panelContainerCls}>
               <div className={panelInputCls} ref={panelInputRef}>
                 <Select
                   disabled={isFollow}
@@ -276,7 +281,7 @@ const ColorPickerPanel: FC<IColorPickerPanelProps> = (props) => {
                 value={alphaNoVerifyVal}
                 disabled={isFollow}
               ></Input>
-            </>
+            </div>
           )}
           {showPresetColor && (
             <div className={colorDivContainerCls}>

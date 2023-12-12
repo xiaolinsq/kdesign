@@ -1,4 +1,4 @@
-import React, { useContext, ReactNode, useCallback, useEffect } from 'react'
+import React, { useContext, ReactNode, useCallback, useEffect, useMemo } from 'react'
 import classNames from 'classnames'
 import cloneDeep from 'lodash/cloneDeep'
 import ConfigContext from '../config-provider/ConfigContext'
@@ -46,7 +46,7 @@ export interface TreeProps {
   scrollToKey?: string
   selectedKeys?: string[]
   notFoundContent?: ReactNode
-  loadData?: () => void
+  loadData?: <T>(data: T) => void
   onCheck?: (checkedKeys: string[], { checked, node, event, halfCheckedKeys }: any) => void
   onExpand?: (expandedKeys: string[], { expanded, node }: any) => void
   onSelect?: (keys: string[], { checked, node, event }: any) => void
@@ -92,6 +92,8 @@ export type KeysDataType = {
 export type PosDataType = {
   [key: string]: TreeNodeData
 }
+
+export type SearchStatus = 'NONE' | 'SEARCH_START' | 'SEARCH_DONE'
 
 const InternalTree = React.forwardRef((props: TreeProps, ref: any): React.FunctionComponentElement<TreeProps> => {
   const { getPrefixCls, prefixCls, compDefaultProps: userDefaultProps } = useContext(ConfigContext)
@@ -139,12 +141,14 @@ const InternalTree = React.forwardRef((props: TreeProps, ref: any): React.Functi
     onlyExpandOnClickIcon = false,
     loadData,
     notFoundContent,
+    showLine,
     ...others
   } = TreeProps
 
   const treePrefixCls = getPrefixCls!(prefixCls, 'tree', customPrefixcls) // 树样式前缀
   const treeNodeClassName = classNames(className, {
     [`${treePrefixCls}`]: true,
+    [`${treePrefixCls}-show-line`]: showLine,
   })
   const treeRootClassName = `${treePrefixCls}-root`
   const estimatedItemSize = innerEstimatedItemSize // 节点高度
@@ -167,12 +171,16 @@ const InternalTree = React.forwardRef((props: TreeProps, ref: any): React.Functi
   const [dragOverNodeKey, setDragOverNodeKey] = React.useState<any>(null)
   const [loadedKeys, setLoadedKeys] = React.useState<Set<string>>(new Set())
   const [loadingKeys, setLoadingKeys] = React.useState<Set<string>>(new Set())
-  const [searchExpandedKeys, setSearchExpandedKeys] = React.useState<Array<string>>([])
+  const [searchStatus, setSearchStatus] = React.useState<SearchStatus>('NONE')
 
   const isSearching = React.useMemo(() => typeof filterTreeNode === 'function' && !!filterValue, [filterValue])
 
   useEffect(() => {
-    setSearchExpandedKeys([])
+    if (isSearching) {
+      setSearchStatus('SEARCH_START')
+    } else {
+      setSearchStatus('NONE')
+    }
   }, [filterValue])
 
   const [expandedKeys, setExpandedKeys] = useExpand(
@@ -187,7 +195,8 @@ const InternalTree = React.forwardRef((props: TreeProps, ref: any): React.Functi
     filterTreeNode,
     isSearching,
     keysData,
-    searchExpandedKeys,
+    searchStatus,
+    filterValue,
   )
   const { spreadAttrData, posData } = React.useMemo(() => {
     return getSpreadAttrData(flattenAllData, expandedKeys)
@@ -205,7 +214,7 @@ const InternalTree = React.forwardRef((props: TreeProps, ref: any): React.Functi
 
   const filterData = React.useMemo(() => {
     return getFilterData(spreadAttrData, filterTreeNode, isSearching, posData, keysData)
-  }, [spreadAttrData, isSearching, posData, keysData])
+  }, [spreadAttrData, isSearching, posData, keysData, filterValue])
 
   useEffect(() => {
     if (typeof scrollKey === 'undefined') {
@@ -268,12 +277,9 @@ const InternalTree = React.forwardRef((props: TreeProps, ref: any): React.Functi
         setExpandedKeys(newExpandedKeys)
       }
       onExpand && onExpand(newExpandedKeys, { node, expanded: expanded })
-      if (isSearching) {
-        const newSearchExpandedKeys = expanded ? addKeys(searchExpandedKeys, [key]) : delKey(searchExpandedKeys, [key])
-        setSearchExpandedKeys(newSearchExpandedKeys)
-      }
       setScrollKey(undefined)
       setIsInit(false)
+      setSearchStatus('SEARCH_DONE')
       if (expanded && loadData) {
         handleNodeLoad(loadedKeys, loadingKeys, node)
       }
@@ -439,6 +445,16 @@ const InternalTree = React.forwardRef((props: TreeProps, ref: any): React.Functi
     setCheckedKeys(checkedKeys)
   }, [checkedKeys, setCheckedKeys])
 
+  const isSelectedNodeChildrenKey = (parentKeys: any = []) => {
+    const key = Array.isArray(selectedKeys) ? selectedKeys?.[0] : selectedKeys
+    return parentKeys.includes(key)
+  }
+
+  const seletedKeyLevel = useMemo(() => {
+    const key = Array.isArray(selectedKeys) ? selectedKeys?.[0] : selectedKeys
+    return keysData?.[key]?.level
+  }, [keysData, selectedKeys])
+
   const renderTreeNode = (item: any) => {
     const checked = getChecked(checkedKeys, item.key)
     const indeterminate = getHalfChecked(halfCheckedKeys, item.key)
@@ -477,7 +493,8 @@ const InternalTree = React.forwardRef((props: TreeProps, ref: any): React.Functi
     item.onlyExpandOnClickIcon = onlyExpandOnClickIcon
     item.loading = loadingKeys.has(item.key) && !loadedKeys.has(item.key)
     item.loadData = loadData
-    return <TreeNode {...item} key={item.key} ref={treeNodeRef} />
+    item.isActiveLine = showLine && isSelectedNodeChildrenKey(item.pathParentKeys)
+    return <TreeNode {...item} key={item.key} ref={treeNodeRef} activeLevel={seletedKeyLevel} />
   }
 
   return (

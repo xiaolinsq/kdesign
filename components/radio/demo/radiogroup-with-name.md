@@ -10,10 +10,10 @@ import React from 'react'
 import ReactDOM from 'react-dom'
 import { Radio } from '@kdcloudjs/kdesign'
 
-function Demo() {
+const Demo: React.FC = () => {
   return (
     <div style={{ width: '350px' }}>
-    <Radio.Group name="radiogroup" defaultValue={'AAAA'}>
+    <Radio.Group defaultValue={'AAAA'}>
       <Radio value={'AAAA'}>A</Radio>
       <Radio value={'BBBB'}>B</Radio>
       <Radio value={'CCCC'}>C</Radio>

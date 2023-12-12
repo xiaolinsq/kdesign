@@ -1,4 +1,4 @@
-import React, { useContext, useRef, useEffect, useState, useCallback } from 'react'
+import React, { useContext, useRef, useEffect, useState, useCallback, useMemo } from 'react'
 import { useMergedState } from '../_utils/hooks'
 import classNames from 'classnames'
 import ConfigContext from '../config-provider/ConfigContext'
@@ -8,15 +8,20 @@ import { CityPickerProps, CityList, Type, City } from './interface'
 import usePopper from '../_utils/usePopper'
 import Option from './option'
 import escapeRegExp from 'lodash/escapeRegExp'
+import KeyCode from '../_utils/KeyCode'
+import isObject from 'lodash/isObject'
 
-const tabsData = [
-  { id: 'domestic', name: '国内' },
-  { id: 'foreign', name: '国际/中国港澳台' },
-]
+const getCityId = (data: City | string | number) => {
+  if (isObject(data)) {
+    return data?.id
+  }
+  return data
+}
 
 const InternalSelect: React.ForwardRefRenderFunction<CityPickerProps> = (props: any, ref: unknown) => {
-  const { getPrefixCls, prefixCls, compDefaultProps: userDefaultProps } = useContext(ConfigContext)
+  const { getPrefixCls, prefixCls, compDefaultProps: userDefaultProps, locale } = useContext(ConfigContext)
   const selectProps = getCompProps('CityPicker', userDefaultProps, props)
+  const cityPickerLangMsg = locale.getCompLangMsg({ componentName: 'CityPicker' })
   const {
     type,
     size,
@@ -48,22 +53,29 @@ const InternalSelect: React.ForwardRefRenderFunction<CityPickerProps> = (props: 
     domesticList = [],
     foreignList = [],
     itemRender,
+    onTabPaneChange,
   } = selectProps
   const [initValue, setInitValue] = useMergedState(undefined, {
-    value,
-    defaultValue,
+    value: getCityId(value),
+    defaultValue: getCityId(defaultValue),
   })
+  const tabsData = [
+    { id: 'domestic', name: cityPickerLangMsg?.tabsDomestic },
+    { id: 'foreign', name: cityPickerLangMsg?.tabsInternation },
+  ]
   const innerRef = useRef<HTMLElement>()
   const selectRef = (ref as any) || innerRef
   const searchRef = useRef<any>(null) // 搜索框ref
   const selectionRef = useRef<any>(null)
   const clearRef = useRef<HTMLSpanElement>(null)
+  const optionsListRef = useRef<HTMLDivElement>(null)
 
   const [optionShow, setOptionShow] = useState<boolean>(
     typeof props.visible === 'undefined' ? !!defaultOpen : !!props.visible,
   )
   const [searchValue, setSearchValue] = useState<any>('')
   const [focusd, setFocusd] = useState(false)
+  const [afterChangeFocus, setAfterChangeFocus] = useState(false)
   const [seletedCity, setSeletedCity] = useState<City | null>(null)
   const [tabsValue, setTabsValue] = useState<Type>('domestic')
 
@@ -90,11 +102,13 @@ const InternalSelect: React.ForwardRefRenderFunction<CityPickerProps> = (props: 
 
   useEffect(() => {
     if (typeof value === 'undefined') return
+    if (isObject(value)) {
+      setSeletedCity(value)
+      return
+    }
     const cityList = [...commonList, ...domesticList, ...foreignList]
     const city = cityList.find((city) => city.id === value)
-    if (city) {
-      setSeletedCity(city)
-    }
+    setSeletedCity(city)
   }, [commonList, domesticList, foreignList, value])
 
   useEffect(() => {
@@ -102,12 +116,6 @@ const InternalSelect: React.ForwardRefRenderFunction<CityPickerProps> = (props: 
       setOptionShow(props.visible)
     }
   }, [props.visible])
-
-  useEffect(() => {
-    if (optionShow === false) {
-      handleClear()
-    }
-  }, [optionShow])
 
   const handleFocus = useCallback(
     (e: React.ChangeEvent<HTMLSpanElement>) => {
@@ -122,6 +130,7 @@ const InternalSelect: React.ForwardRefRenderFunction<CityPickerProps> = (props: 
     (e: React.ChangeEvent<HTMLSpanElement>) => {
       e.stopPropagation()
       setFocusd(false)
+      setAfterChangeFocus(false)
       onBlur && onBlur(e)
     },
     [onBlur],
@@ -176,7 +185,7 @@ const InternalSelect: React.ForwardRefRenderFunction<CityPickerProps> = (props: 
       [`${selectPrefixCls}-icon-arrow-focus`]: optionShow,
     })
 
-    const iconShow = allowClear && !disabled && ((initValue ?? '') !== '' || searchValue)
+    const iconShow = allowClear && !disabled && (initValue ?? '') !== ''
 
     return (
       <>
@@ -187,7 +196,7 @@ const InternalSelect: React.ForwardRefRenderFunction<CityPickerProps> = (props: 
             className={`${selectPrefixCls}-icon-clear`}
             ref={clearRef}
           >
-            {clearIcon || <Icon type="close-solid" />}
+            {clearIcon || <Icon type="close" />}
           </span>
         )}
         {showArrow && <span className={arrowIconCls}>{suffixIcon || <Icon type="arrow-down" />}</span>}
@@ -230,28 +239,37 @@ const InternalSelect: React.ForwardRefRenderFunction<CityPickerProps> = (props: 
 
   const handleOption = (city: City) => {
     handleVisibleChange(false)
+    city.type = tabsValue === 'domestic' ? 'domestic' : 'foreign'
     city?.id !== initValue && onChange?.(city?.id, city)
+    searchRef.current?.focus()
+    setAfterChangeFocus(true)
     if (typeof value === 'undefined') {
       setSeletedCity(city)
       setInitValue(city?.id)
     }
   }
 
-  const renderNodeList = (data: CityList, notContent: string) => {
+  const renderNodeList = (data: CityList, notContent: string, isCommon = false) => {
     if (!data.length) {
       return renderNotContent(notContent)
     }
     return (
-      <div className={`${selectPrefixCls}-list`}>
-        {data.map((item) => {
+      <div className={`${selectPrefixCls}-list`} ref={optionsListRef} onMouseDown={(e) => e?.preventDefault()}>
+        {data.map((item, index) => {
           return (
             <Option
               key={item.id}
               value={initValue}
               city={item}
-              renderCityInfo={renderCityInfo}
+              className={searchValue ? `${selectPrefixCls}-list-item-match` : undefined}
+              renderCityInfo={(data, flag) => renderCityInfo(data, isCommon, flag)}
               onChangeSelect={handleOption}
               itemRender={itemRender}
+              activeIndex={activeIndex}
+              index={index}
+              onChangeActiveIndex={(i) => {
+                setActiveIndex(i)
+              }}
             >
               {searchValue ? getHighlightText(item?.name, item?.[optionHighlightProps] || searchValue) : item?.name}
             </Option>
@@ -269,6 +287,7 @@ const InternalSelect: React.ForwardRefRenderFunction<CityPickerProps> = (props: 
 
   const toggleTabPane = (type: Type) => {
     setTabsValue(type)
+    onTabPaneChange?.(type)
   }
 
   // 渲染下拉列表框
@@ -290,13 +309,15 @@ const InternalSelect: React.ForwardRefRenderFunction<CityPickerProps> = (props: 
             )}
 
             {tabsValue === 'domestic'
-              ? renderNodeList(domesticList, '暂无数据')
-              : renderNodeList(foreignList, '暂无数据')}
+              ? renderNodeList(domesticList, cityPickerLangMsg?.emptyText)
+              : renderNodeList(foreignList, cityPickerLangMsg?.emptyText)}
           </>
         ) : (
           <>
-            {!!commonList.length && <div className={`${selectPrefixCls}-dropdown-common`}>常用</div>}
-            {renderNodeList(commonList, '无常用城市')}
+            {!!commonList.length && (
+              <div className={`${selectPrefixCls}-dropdown-common`}>{cityPickerLangMsg?.common}</div>
+            )}
+            {renderNodeList(commonList, cityPickerLangMsg?.commonEmptyText, true)}
           </>
         )}
       </>
@@ -304,19 +325,34 @@ const InternalSelect: React.ForwardRefRenderFunction<CityPickerProps> = (props: 
   }
 
   const renderCityInfo = useCallback(
-    (data: City | null, flag = false, symbol = ', ') => {
+    (data: City | null, isCommon = false, flag = false, symbol = ', ') => {
       if (!data) return null
       if (isDomestic(type)) {
-        return `${flag && data?.province ? symbol : ''}${data?.province}`
+        if (isCommon) {
+          const curVal = data?.province ? data?.province : data?.country
+          return `${flag && curVal ? symbol : ''}${curVal}`
+        }
+        if (data?.type) {
+          const curVal = data.type === 'domestic' ? data?.province || data?.country : data?.country
+          return `${flag && curVal ? symbol : ''}${curVal}`
+        }
+        const curVal = tabsValue === 'domestic' ? data?.province || data?.country : data?.country
+        return `${flag && curVal ? symbol : ''}${curVal}`
       } else {
-        return `${flag && data?.province ? symbol : ''}${data?.province}${data?.country ? symbol : ''}${data?.country}`
+        return `${flag && (data?.province || data?.country) ? symbol : ''}${data?.province}${
+          data?.country && data?.province ? symbol : ''
+        }${data?.country}`
       }
     },
-    [type],
+    [type, tabsValue],
   )
 
   const renderSingle = () => {
     const hiddenStyle = !!searchValue || (initValue ?? '') !== '' ? { visibility: 'hidden' as const } : undefined
+    const itemCls = classNames({
+      [`${selectPrefixCls}-content-item`]: true,
+      [`${selectPrefixCls}-content-item-seleted`]: afterChangeFocus,
+    })
     return (
       <>
         <div className={singleCls} ref={selectionRef}>
@@ -332,7 +368,7 @@ const InternalSelect: React.ForwardRefRenderFunction<CityPickerProps> = (props: 
                 readOnly={!!disabled}
               />
               {!searchValue && (
-                <span className={`${selectPrefixCls}-content-item`} title={seletedCity?.name}>
+                <span className={itemCls} title={seletedCity?.name}>
                   {seletedCity?.name}
                 </span>
               )}
@@ -340,7 +376,7 @@ const InternalSelect: React.ForwardRefRenderFunction<CityPickerProps> = (props: 
             {!searchValue && <span className={`${selectPrefixCls}-content-info`}>{renderCityInfo(seletedCity)}</span>}
           </div>
           <span className={`${selectPrefixCls}-placeholder`} style={hiddenStyle}>
-            {placeholder}
+            {!disabled ? placeholder : null}
           </span>
           <span className={`${selectPrefixCls}-suffix`}>{renderSuffix()}</span>
         </div>
@@ -370,6 +406,81 @@ const InternalSelect: React.ForwardRefRenderFunction<CityPickerProps> = (props: 
     }
   }, [initValue])
 
+  // keyboard
+  const curkeyboardList = useMemo(() => {
+    if (!searchValue) {
+      return commonList
+    } else if (tabsValue === 'domestic') {
+      return domesticList
+    } else {
+      return foreignList
+    }
+  }, [commonList, domesticList, foreignList, searchValue, tabsValue])
+
+  const getActiveIndex = (index: number, offset = 1): number => {
+    const len = curkeyboardList.length
+    for (let i = 0; i < len; i += 1) {
+      const current = (index + i * offset + len) % len
+      return current
+    }
+    return -1
+  }
+
+  const [activeIndex, setActiveIndex] = useState(-1)
+
+  const initActiveIndex = (index: number | undefined = undefined) => {
+    setActiveIndex(index === undefined ? getActiveIndex(0) : index)
+  }
+
+  useEffect(() => {
+    initActiveIndex(searchValue ? undefined : -1)
+  }, [searchValue, tabsValue, curkeyboardList])
+
+  const onInternalKeyDown: React.KeyboardEventHandler<HTMLSpanElement> = (e) => {
+    const { which } = e
+    // open
+    if (which === KeyCode.ENTER || which === KeyCode.UP || which === KeyCode.DOWN) {
+      e.preventDefault()
+      setOptionShow(true)
+    }
+    // up、down、enter、esc
+    if (optionShow) {
+      let offset = 0
+      switch (which) {
+        case KeyCode.UP:
+          offset = -1
+          break
+        case KeyCode.DOWN:
+          offset = 1
+          break
+        case KeyCode.ENTER: {
+          const item = curkeyboardList[activeIndex]
+          if (!item) return
+          handleOption(item)
+          handleVisibleChange(false)
+          break
+        }
+        case KeyCode.ESC:
+          handleVisibleChange(false)
+          break
+        default:
+          break
+      }
+      if (offset !== 0) {
+        const nextActiveIndex = getActiveIndex(activeIndex + offset, offset)
+        const curDom = optionsListRef.current?.children?.[nextActiveIndex]
+        if (curDom) {
+          optionsListRef.current?.children[nextActiveIndex].scrollIntoView({
+            behavior: 'auto',
+            block: 'nearest',
+          })
+        }
+        setActiveIndex(nextActiveIndex)
+        e.preventDefault()
+      }
+    }
+  }
+
   const renderCityPicker = () => {
     return (
       <div className={cityPickerCls} ref={selectRef} style={style}>
@@ -379,6 +490,7 @@ const InternalSelect: React.ForwardRefRenderFunction<CityPickerProps> = (props: 
           tabIndex={disabled ? -1 : 0}
           onFocus={() => searchRef.current?.focus()}
           onBlur={() => searchRef.current?.blur()}
+          onKeyDown={onInternalKeyDown}
         >
           {renderSingle()}
         </span>
@@ -401,6 +513,9 @@ const InternalSelect: React.ForwardRefRenderFunction<CityPickerProps> = (props: 
   }
 
   const handleVisibleChange = (visible: boolean) => {
+    if (!visible) {
+      initActiveIndex(-1)
+    }
     if (visible !== optionShow) {
       props.visible === undefined && setOptionShow(visible)
       onVisibleChange && onVisibleChange(visible)
@@ -416,6 +531,11 @@ const InternalSelect: React.ForwardRefRenderFunction<CityPickerProps> = (props: 
     visible: optionShow,
     onVisibleChange: handleVisibleChange,
     clickToClose: !searchValue,
+    onTransitionEnd: () => {
+      if (optionShow === false) {
+        handleClear()
+      }
+    },
   }
   return usePopper(renderCityPicker(), renderContent(), popperProps)
 }

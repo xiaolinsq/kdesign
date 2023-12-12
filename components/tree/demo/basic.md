@@ -7,12 +7,13 @@ title: 基本
 import React from 'react'
 import ReactDOM from 'react-dom'
 import { Tree } from '@kdcloudjs/kdesign'
+import type { TreeNodeData } from '@kdcloudjs/kdesign'
 
-function Demo() {
-  const [expandedKeys, setExpandedKeys] = React.useState(['0-1', '0', '1'])
-  const [checkedKeys, setCheckedKeys] = React.useState(['1-1'])
-  const [selectedKeys, setSelectedKeys] = React.useState(['1-1'])
-  const data = [
+const Demo: React.FC = () => {
+  const [expandedKeys, setExpandedKeys] = React.useState<Array<string>>(['0-1', '0', '1'])
+  const [checkedKeys, setCheckedKeys] = React.useState<Array<string>>(['1-1'])
+  const [selectedKeys, setSelectedKeys] = React.useState<Array<string>>(['1-1'])
+  const data: TreeNodeData[] = [
     {
       key: '0',
       title: '0',
@@ -102,7 +103,6 @@ function Demo() {
   return (
     <div style={{ width: '300px', height: '300px' }}>
       <Tree
-        name="Tree"
         treeData={data}
         expandedKeys={expandedKeys}
         onSelect={onSelect}

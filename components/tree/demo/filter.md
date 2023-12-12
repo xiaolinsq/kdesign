@@ -7,59 +7,60 @@ title: 节点过滤
 import React from 'react'
 import ReactDOM from 'react-dom'
 import { Tree, Input } from '@kdcloudjs/kdesign'
+import type { TreeNodeData } from '@kdcloudjs/kdesign'
 
-function Demo() {
-  const [expandedKeys, setExpandedKeys] = React.useState([])
-  const [selectedKeys, setSelectedKeys] = React.useState(['1-1'])
-  const [value, setValue] = React.useState('')
-  const data = [
+const Demo: React.FC = () => {
+  const [expandedKeys, setExpandedKeys] = React.useState<Array<string>>([])
+  const [selectedKeys, setSelectedKeys] = React.useState<Array<string>>(['1-1'])
+  const [value, setValue] = React.useState<string>('')
+  const data: TreeNodeData[] = [
     {
       key: '0',
-      title: '0',
+      title: '家具',
       children: [
         {
           key: '0-0',
-          title: '0-0',
+          title: '沙发',
           children: [],
         },
         {
           key: '0-1',
-          title: '0-1',
+          title: '餐桌',
           children: [],
         },
       ],
     },
     {
       key: '1',
-      title: '1',
+      title: '电子产品',
       children: [
         {
           key: '1-0',
-          title: '1-0',
+          title: '商用电子',
           children: [],
         },
         {
           key: '1-11',
-          title: '1-11',
+          title: '日用电子',
           children: [
             {
               key: '1-1-0',
-              title: '1-1-0',
+              title: '手机',
               children: [
                 {
                   key: '1-1-0-0',
-                  title: '1-1-0-0',
+                  title: '华为',
                   children: [],
                 },
               ],
             },
             {
               key: '1-1-1',
-              title: '1-1-1',
+              title: '电脑',
               children: [
                 {
                   key: '1-1-1-0',
-                  title: '1-1-1-0',
+                  title: '笔记本',
                   children: [],
                 },
               ],
@@ -68,19 +69,19 @@ function Demo() {
         },
         {
           key: '1-2',
-          title: '1-2',
+          title: '研发电子',
           children: [],
         },
       ],
     },
     {
       key: '2',
-      title: '2',
+      title: '食品',
       children: [],
     },
     {
       key: '3',
-      title: '3',
+      title: '服装',
       children: [],
     },
   ]
@@ -103,9 +104,8 @@ function Demo() {
 
   return (
     <div style={{ width: '300px', height: '300px' }}>
-      <Input placeholder="输入关键字进行过滤" onChange={(e)=> setValue(e.target.value)} />
+      <Input placeholder="输入关键字进行过滤" onChange={(e) => setValue(e.target.value)} />
       <Tree
-        name="Tree"
         treeData={data}
         expandedKeys={expandedKeys}
         onSelect={onSelect}

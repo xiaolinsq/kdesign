@@ -7,10 +7,12 @@ order: 4
 import React from 'react'
 import ReactDOM from 'react-dom'
 import { Carousel } from '@kdcloudjs/kdesign'
+import type { DotPositionType } from '@kdcloudjs/kdesign'
 
-function Demo() {
+
+const Demo: React.FC = () => {
   const carouselRef = React.useRef()
-  const [dotPosition, setDotPosition] = React.useState('bottom')
+  const [dotPosition, setDotPosition] = React.useState<DotPositionType>('bottom')
   React.useEffect(() => {
     if (!carouselRef.current) return
     carouselRef.current.getRef().parentNode.style.display = 'flex'
@@ -29,7 +31,7 @@ function Demo() {
     <div style={{ display: 'flex', flexDirection: 'column', flex: '1' }}>
       <p>滑动切换</p>
       <br />
-      <Carousel name="Carousel" dotPosition={dotPosition} ref={carouselRef}>
+      <Carousel dotPosition={dotPosition} ref={carouselRef}>
         <div style={itemStyle}>
           <h3>1</h3>
         </div>
@@ -46,7 +48,7 @@ function Demo() {
       <br />
       <p>渐显切换</p>
       <br />
-      <Carousel name="Carousel" dotPosition={dotPosition} ref={carouselRef} effect="fade">
+      <Carousel dotPosition={dotPosition} ref={carouselRef} effect="fade">
         <div style={itemStyle}>
           <h3>1</h3>
         </div>
@@ -63,7 +65,7 @@ function Demo() {
       <br />
       <p>无切换动画</p>
       <br />
-      <Carousel name="Carousel" ref={carouselRef} effect="none">
+      <Carousel ref={carouselRef} effect="none">
         <div style={itemStyle}>
           <h3>1</h3>
         </div>

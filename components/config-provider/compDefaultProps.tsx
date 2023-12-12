@@ -178,6 +178,8 @@ const compDefaultProps = {
     cancelButtonProps: {},
     okButtonProps: {},
     showline: true,
+    overroll: false,
+    resizable: false,
   },
   Menu: {
     mode: 'vertical',
@@ -455,6 +457,19 @@ const compDefaultProps = {
     showDescription: true,
     optionHighlightProps: 'highlightText',
     allowClear: true,
+  },
+  Clipboard: {
+    action: 'copy',
+    disabled: false,
+    size: 'middle',
+  },
+  QRCode: {
+    value: 'https://www.kingdee.design/',
+    size: 86,
+    status: 'active',
+    type: 'canvas',
+    errorLevel: 'H',
+    color: '#000000',
   },
 }
 

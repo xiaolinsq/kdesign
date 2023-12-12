@@ -24,6 +24,7 @@
   font-size: @radio-font-size;
   max-width: @radio-default-label-max-width;
   overflow: hidden;
+  min-height: @radio-circle-size;
 
   &::before {
     position: absolute;
@@ -59,6 +60,7 @@
   &-input {
     position: absolute;
     opacity: 0;
+    left: 0;
   }
 
   &>span {

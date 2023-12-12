@@ -10,8 +10,8 @@ import React from 'react'
 import ReactDOM from 'react-dom'
 import { Spin, Switch } from '@kdcloudjs/kdesign'
 
-function Demo() {
-  const [loading, setLoading] = React.useState(true)
+const Demo: React.FC = () => {
+  const [loading, setLoading] = React.useState<boolean>(true)
 
   function toggleLoading(checked) {
     setLoading(checked)
@@ -19,7 +19,7 @@ function Demo() {
 
   return (
     <>
-      <Spin name="Spin" type="page" spinning={loading}>
+      <Spin type="page" spinning={loading}>
         <div
           style={{
             width: '400px',

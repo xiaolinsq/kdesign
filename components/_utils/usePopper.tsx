@@ -67,6 +67,7 @@ export interface PopperProps {
   onVisibleChange?: (visible: boolean) => void
   getTriggerElement?: (locatorNode: HTMLElement) => HTMLElement
   getPopupContainer?: (locatorNode: HTMLElement) => HTMLElement
+  onTransitionEnd?: (e: React.TransitionEvent) => void
 }
 
 function getTranslate(node: Element, param: string) {
@@ -149,6 +150,19 @@ const getScrollDist: (el: Element, container: Element) => { top: number; left: n
   return elScroll
 }
 
+const getRealDom = (locatorRef: any, locatorElement: any) => {
+  if (!locatorRef.current) return locatorRef.current
+  const REF_NAME_OBJ: any = {
+    Input: 'input',
+    InputNumber: 'input',
+    Select: 'select',
+    Upload: 'input',
+  }
+  if (locatorRef.current.tagName) return locatorRef.current
+  const name = REF_NAME_OBJ[locatorElement?.type?.displayName]
+  return locatorRef?.current[name]
+}
+
 function usePopper(locatorElement: React.ReactElement, popperElement: React.ReactElement, props: PopperProps) {
   const {
     prefixCls,
@@ -171,6 +185,7 @@ function usePopper(locatorElement: React.ReactElement, popperElement: React.Reac
     clickToClose = true,
     getTriggerElement = (locatorNode) => locatorNode,
     getPopupContainer = () => document.body,
+    onTransitionEnd,
   } = props
 
   const arrowWidth = Math.sqrt(2 * Math.pow(arrowSize, 2))
@@ -193,11 +208,12 @@ function usePopper(locatorElement: React.ReactElement, popperElement: React.Reac
   const locatorRef = (locatorElement as any).ref || locatorEl
   const popperRef = (popperElement as any).ref || popperEl
 
-  const container = getPopupContainer(locatorRef.current || document.body)
+  const container = getPopupContainer(getRealDom(locatorRef, locatorElement) || document.body)
 
   Promise.resolve().then(() => {
-    const triggerNode = getTriggerElement(locatorRef.current)
-    const container = getPopupContainer(locatorRef.current)
+    const realDom = getRealDom(locatorRef, locatorElement)
+    const triggerNode = getTriggerElement(realDom)
+    const container = getPopupContainer(realDom)
     devWarning(
       !triggerNode,
       componentName,
@@ -239,15 +255,16 @@ function usePopper(locatorElement: React.ReactElement, popperElement: React.Reac
   const [nextPlacement, setNextPlacement] = useState<string>(placement)
 
   const alignPopper = useCallback(() => {
-    if (locatorRef?.current && popperRef?.current) {
+    const realDom = getRealDom(locatorRef, locatorElement)
+    if (realDom && popperRef?.current) {
       const { width: popperWidth, height: popperHeight } = popperRef.current.getBoundingClientRect()
-      const { top, bottom, left, right, height, width } = locatorRef.current.getBoundingClientRect()
+      const { top, bottom, left, right, height, width } = realDom.getBoundingClientRect()
 
       const { top: containerTop, left: containerLeft } = getOffsetPos(container)
-      const { top: locatorTop, left: locatorLeft } = getOffsetPos(locatorRef.current)
-      const { top: translateTop, left: translateLeft } = getTranslatePos(locatorRef.current)
-      const { top: borderTop, left: borderLeft } = getBorderWidth(locatorRef.current)
-      const { top: scrollTop, left: scrollLeft } = getScrollDist(locatorRef.current.parentElement, container)
+      const { top: locatorTop, left: locatorLeft } = getOffsetPos(realDom)
+      const { top: translateTop, left: translateLeft } = getTranslatePos(realDom)
+      const { top: borderTop, left: borderLeft } = getBorderWidth(realDom)
+      const { top: scrollTop, left: scrollLeft } = getScrollDist(realDom.parentElement, container)
 
       const locatorPos = {
         width,
@@ -409,10 +426,11 @@ function usePopper(locatorElement: React.ReactElement, popperElement: React.Reac
       hidden: !visible,
       [`${nextPlacement}-active`]: active,
     }),
+    onTransitionEnd: typeof onTransitionEnd === 'function' ? onTransitionEnd : undefined,
   }
 
   const popperNode = popperRef.current
-  const locatorNode = locatorRef.current
+  const locatorNode = getRealDom(locatorRef, locatorElement)
 
   useResizeObserver(popperNode || document.body, alignPopper)
   useResizeObserver(locatorNode || document.body, alignPopper)
@@ -449,7 +467,8 @@ function usePopper(locatorElement: React.ReactElement, popperElement: React.Reac
   useEffect(() => {
     if (exist && visible) {
       let mouseleaveTimer: number
-      const triggerNode = getTriggerElement(locatorRef.current)
+      const realDom = getRealDom(locatorRef, locatorElement)
+      const triggerNode = getTriggerElement(realDom)
       const handleHidePopper = (e: MouseEvent) => {
         const triggerRect = triggerNode.getBoundingClientRect()
         const popperRect = popperRef.current.getBoundingClientRect()
@@ -531,8 +550,9 @@ function usePopper(locatorElement: React.ReactElement, popperElement: React.Reac
     }
   }, [alignPopper, exist, onVisibleChange, popperNode, props.visible, scrollHidden, locatorNode, visible, popperRef])
 
-  React.useEffect(() => {
-    const triggerNode = getTriggerElement(locatorRef.current)
+  useEffect(() => {
+    const realDom = getRealDom(locatorRef, locatorElement)
+    const triggerNode = getTriggerElement(realDom)
     if (triggerNode) {
       let mouseenterTimer: number
       const clearMouseLeave = () => clearTimeout(mouseenterTimer)

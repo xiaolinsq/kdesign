@@ -10,9 +10,9 @@ import React from 'react'
 import ReactDOM from 'react-dom'
 import { Menu } from '@kdcloudjs/kdesign'
 
-function Demo() {
+const Demo: React.FC = () => {
   return (
-    <Menu name="Menu" mode="inline" inlineIndent={24} accordion>
+    <Menu mode="inline" inlineIndent={24} accordion>
       <Menu.SubMenu key="sub1" name="SubMenu" title="标签一">
         <Menu.Item name="MenuItem" key="1">
           标签一-1

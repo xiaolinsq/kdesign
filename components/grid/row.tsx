@@ -1,4 +1,4 @@
-import * as React from 'react'
+import React, { createContext } from 'react'
 import classNames from 'classnames'
 import { getCompProps } from '../_utils'
 import { ConfigContext } from '../config-provider'
@@ -25,6 +25,11 @@ export interface RowProps {
   gutter?: number | gutterObject | Array<number | gutterObject>
 }
 
+export interface GridContext {
+  gap: { v: number; h: number }
+  winWidth: number
+}
+
 function getGap(gutter: gutterObject, width: number) {
   const { xs, sm, md, lg, xl } = gutter
   let gap = 0
@@ -35,6 +40,11 @@ function getGap(gutter: gutterObject, width: number) {
   if (xl && width >= 1920) gap = xl
   return gap
 }
+
+export const GapContext = createContext<GridContext>({
+  gap: { h: 0, v: 0 },
+  winWidth: window.innerWidth,
+})
 
 const Row: React.FC<RowProps> = (props) => {
   const { getPrefixCls, prefixCls: pkgPrefixCls, compDefaultProps: userDefaultProps } = React.useContext(ConfigContext)
@@ -51,7 +61,7 @@ const Row: React.FC<RowProps> = (props) => {
   } = getCompProps('Row', userDefaultProps, props)
 
   // 浏览器名称
-  const isSogou = testBrowserType(/^sogou/i, 0)
+  const isSogouOrIe = testBrowserType(/^sogou/i, 0) || /Trident|MSIE/.test(navigator.userAgent)
 
   // className前缀
   const prefixCls = getPrefixCls!(pkgPrefixCls, 'row', customPrefixcls)
@@ -60,7 +70,7 @@ const Row: React.FC<RowProps> = (props) => {
   const updateWidth = throttle(() => setWinWidth(window.innerWidth), 500)
   window.addEventListener('resize', updateWidth)
 
-  const gap: Record<string, number> = { h: 0, v: 0 }
+  const gap: any = { h: 0, v: 0 }
 
   if (gutter.constructor === Number) gap.h = gutter as number
   if (gutter.constructor === Object) {
@@ -80,9 +90,10 @@ const Row: React.FC<RowProps> = (props) => {
   }
 
   const rowStyle: Record<string, any> = {
-    '--cgap': `${gap.h}px`,
+    'row-gap': `${gap.v}px`,
+    margin: `0 ${(-1 * gap.h) / 2}px`,
   }
-  if (gap.v) rowStyle['--rgap'] = `${gap.v}px`
+  if (gap.v && isSogouOrIe) rowStyle['margin-bottom'] = `${-1 * gap.v}px`
 
   const toalign: Record<string, string> = {
     top: 'flex-start',
@@ -96,16 +107,18 @@ const Row: React.FC<RowProps> = (props) => {
   }
 
   const styleString = {
-    ...style,
     ...rowStyle,
+    ...style,
     alignItems: toalign[align] || align,
     justifyContent: tojustify[justify] || justify,
   }
 
   return (
-    <div className={classNames(prefixCls, className, { nowrap: !wrap }, { 'sogou-row': isSogou })} style={styleString}>
-      {React.Children.map(children, (child: React.ReactElement) => React.cloneElement(child, { winWidth }))}
-    </div>
+    <GapContext.Provider value={{ gap: gap, winWidth: winWidth }}>
+      <div className={classNames(prefixCls, className, { nowrap: !wrap })} style={styleString}>
+        {children}
+      </div>
+    </GapContext.Provider>
   )
 }
 

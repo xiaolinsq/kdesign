@@ -23,8 +23,9 @@ import KeyCode from '../_utils/KeyCode'
 const INPUT_MIN_WIDTH = 4 // 输入框最小宽度
 
 const InternalSelect: React.ForwardRefRenderFunction<ISelectProps<SelectValue>> = (props: any, ref: unknown) => {
-  const { getPrefixCls, prefixCls, compDefaultProps: userDefaultProps } = useContext(ConfigContext)
+  const { getPrefixCls, prefixCls, compDefaultProps: userDefaultProps, locale } = useContext(ConfigContext)
   const selectProps = getCompProps('Select', userDefaultProps, props)
+  const selectLangMsg = locale.getCompLangMsg({ componentName: 'Select' })
   const {
     size,
     value,
@@ -59,6 +60,7 @@ const InternalSelect: React.ForwardRefRenderFunction<ISelectProps<SelectValue>> 
     popperStyle = {},
     tagRender,
     virtualListProps,
+    status,
   } = selectProps
   const isMultiple = mode === 'multiple' // 是否多选
   const [initValue, setInitValue] = useMergedState(undefined, {
@@ -123,6 +125,7 @@ const InternalSelect: React.ForwardRefRenderFunction<ISelectProps<SelectValue>> 
     [`${selectPrefixCls}-size-${size}`]: size,
     [`${selectPrefixCls}-wrapper`]: true,
     [`${selectPrefixCls}-show-search`]: isShowSearch && focusd,
+    [`${selectPrefixCls}-error`]: status === 'error',
   })
 
   useEffect(() => {
@@ -464,12 +467,12 @@ const InternalSelect: React.ForwardRefRenderFunction<ISelectProps<SelectValue>> 
     })
     return (
       <>
-        {iconShow && (
+        {iconShow ? (
           <span onClick={handleReset} onMouseDown={(e) => e.preventDefault()} className={clearIconCls} ref={clearRef}>
             {clearIcon || <Icon type="close-solid" />}
           </span>
-        )}
-        {showArrow && <span className={arrowIconCls}>{suffixIcon || <Icon type="arrow-down" />}</span>}
+        ) : null}
+        {showArrow ? <span className={arrowIconCls}>{suffixIcon || <Icon type="arrow-down" />}</span> : null}
       </>
     )
   }
@@ -582,13 +585,13 @@ const InternalSelect: React.ForwardRefRenderFunction<ISelectProps<SelectValue>> 
       <>
         {
           <div className={dropDownCls} style={dropdownStyle} ref={dropDownRef}>
-            {!dropdownRender && childrenToRender.length > 0 && dropRender(eleOptionList, heightStyle)}
+            {!dropdownRender && childrenToRender.length > 0 ? dropRender(eleOptionList, heightStyle) : null}
             {/* 下拉列表为空 */}
             {renderNotContent()}
             {/* 拓展菜单 */}
-            <div>{dropdownRender && dropdownRender(dropRender(childrenToRender, heightStyle))}</div>
+            <div>{dropdownRender ? dropdownRender(dropRender(eleOptionList, heightStyle)) : null}</div>
             {/* 多选模式-----底部 */}
-            {isMultiple && realChildren.length > 0 && (
+            {isMultiple && realChildren.length > 0 ? (
               <div className={multipleFooterCls}>
                 <Checkbox
                   style={checkboxStyle}
@@ -596,13 +599,19 @@ const InternalSelect: React.ForwardRefRenderFunction<ISelectProps<SelectValue>> 
                   indeterminate={indeterminate}
                   onChange={handleSelectAll}
                 >
-                  全选
+                  {selectLangMsg?.selectAll}
                 </Checkbox>
                 <span className={`${selectPrefixCls}-multiple-footer-hadSelected`}>
-                  已选<span>{selectedVal.length}</span>项
+                  {locale.getLangMsg('Select', 'seleted', {
+                    size: (
+                      <span className={`${selectPrefixCls}-multiple-footer-hadSelected-number`}>
+                        {selectedVal.length}
+                      </span>
+                    ),
+                  })}
                 </span>
               </div>
-            )}
+            ) : null}
           </div>
         }
       </>
@@ -657,7 +666,7 @@ const InternalSelect: React.ForwardRefRenderFunction<ISelectProps<SelectValue>> 
               readOnly={!isShowSearch || !!disabled}
             />
           </span>
-          {singleVal && !searchValue && <span className={`${selectPrefixCls}-selection-item`}>{singleVal}</span>}
+          {singleVal && !searchValue ? <span className={`${selectPrefixCls}-selection-item`}>{singleVal}</span> : null}
           <span className={`${selectPrefixCls}-placeholder`} style={hiddenStyle}>
             {placeholder}
           </span>
@@ -674,7 +683,6 @@ const InternalSelect: React.ForwardRefRenderFunction<ISelectProps<SelectValue>> 
       [`${selectPrefixCls}-multiple-disabled`]: disabled,
       [`${selectPrefixCls}-${mode}`]: mode,
       [`${selectPrefixCls}-focused`]: focusd || optionShow,
-      [`${selectPrefixCls}-placeholder`]: placeholder && !mulOptions.length,
     })
 
     const itemCls = classNames({
@@ -684,35 +692,33 @@ const InternalSelect: React.ForwardRefRenderFunction<ISelectProps<SelectValue>> 
     const TagStyle = { margin: '2px 8px 2px 0', maxWidth: '100%' }
     return (
       <div className={multipleCls} ref={selectionRef}>
-        {Array.isArray(mulOptions) && (
+        {Array.isArray(mulOptions) ? (
           <>
             {mulOptions.map((item: any, index: number) => {
               const { label, value } = item
-              return (
-                (!maxTagCount || index <= maxTagCount - 1) && (
-                  <span
-                    key={value}
-                    className={classNames(`${selectPrefixCls}-selection-tag`)}
-                    onMouseDown={(e) => e.preventDefault()}
-                  >
-                    {typeof tagRender === 'function' ? (
-                      tagRender?.({ onClose: handleRemove, value, label, disabled, size })
-                    ) : (
-                      <Tag
-                        type="edit"
-                        style={TagStyle}
-                        size={size}
-                        closable
-                        disabled={disabled}
-                        onClose={(e) => handleRemove(e, value)}
-                        data-tag={value}
-                      >
-                        {label}
-                      </Tag>
-                    )}
-                  </span>
-                )
-              )
+              return !maxTagCount || index <= maxTagCount - 1 ? (
+                <span
+                  key={value}
+                  className={classNames(`${selectPrefixCls}-selection-tag`)}
+                  onMouseDown={(e) => e.preventDefault()}
+                >
+                  {typeof tagRender === 'function' ? (
+                    tagRender?.({ onClose: handleRemove, value, label, disabled, size })
+                  ) : (
+                    <Tag
+                      type="edit"
+                      style={TagStyle}
+                      size={size}
+                      closable
+                      disabled={disabled}
+                      onClose={(e) => handleRemove(e, value)}
+                      data-tag={value}
+                    >
+                      {label}
+                    </Tag>
+                  )}
+                </span>
+              ) : null
             })}
             {maxTagCount && mulOptions.length > maxTagCount ? (
               maxTagPlaceholder ? (
@@ -724,7 +730,7 @@ const InternalSelect: React.ForwardRefRenderFunction<ISelectProps<SelectValue>> 
               )
             ) : null}
           </>
-        )}
+        ) : null}
         <span className={`${selectPrefixCls}-selection-search`} style={{ width: inputWidth }}>
           <input
             ref={searchRef}
@@ -739,7 +745,9 @@ const InternalSelect: React.ForwardRefRenderFunction<ISelectProps<SelectValue>> 
             {searchValue}&nbsp;
           </span>
         </span>
-        <span className={`${selectPrefixCls}-placeholder`}>{!mulOptions.length && !searchValue && placeholder}</span>
+        <span className={`${selectPrefixCls}-placeholder`}>
+          {!mulOptions.length && !searchValue ? placeholder : null}
+        </span>
         <span className={`${selectPrefixCls}-suffix`}>{renderSuffix()}</span>
       </div>
     )
@@ -805,7 +813,7 @@ const InternalSelect: React.ForwardRefRenderFunction<ISelectProps<SelectValue>> 
     // open
     if (which === KeyCode.ENTER || which === KeyCode.UP || which === KeyCode.DOWN) {
       e.preventDefault()
-      setOptionShow(true)
+      handleVisibleChange(true)
     }
     // backspace
     const { selectedVal, selectMulOpts } = multipleRef.current
@@ -815,12 +823,6 @@ const InternalSelect: React.ForwardRefRenderFunction<ISelectProps<SelectValue>> 
       selectMulOpts.splice(-1, 1)
       setMulOptions([...selectMulOpts])
       onChange && onChange(labelInValue ? selectMulOpts : selectedVal, selectMulOpts)
-      // !isMultiple
-    } else if (which === KeyCode.BACKSPACE && allowClear && !isMultiple) {
-      setInitValue('')
-      onClear && onClear('')
-      setSearchValue('')
-      onChange && onChange(undefined)
     }
     // optionsList: up、down、enter
     if (optionShow) {
@@ -831,6 +833,7 @@ const InternalSelect: React.ForwardRefRenderFunction<ISelectProps<SelectValue>> 
         offset = 1
       } else if (which === KeyCode.ENTER) {
         const item = filledOptions[activeIndex]
+        if (!item) return
         const key = item.props?.value || item.value
         const label = item.props?.children || item.label
         handleOption(key, label, true)
@@ -847,10 +850,10 @@ const InternalSelect: React.ForwardRefRenderFunction<ISelectProps<SelectValue>> 
           )
         }
         if (!isMultiple) {
-          setOptionShow(false)
+          handleVisibleChange(false)
         }
       } else if (which === KeyCode.ESC) {
-        setOptionShow(false)
+        handleVisibleChange(false)
       }
       if (offset !== 0) {
         const nextActiveIndex = getActiveIndex(activeIndex + offset, offset)
@@ -905,7 +908,7 @@ const InternalSelect: React.ForwardRefRenderFunction<ISelectProps<SelectValue>> 
 
   const popperProps = {
     ...selectProps,
-    prefixCls: selectPrefixCls,
+    prefixCls: `${selectPrefixCls}-dropdown-panel${isMultiple ? ` ${selectPrefixCls}-multiple-dropdown-panel` : ''}`,
     placement: 'bottomLeft',
     popperStyle: catchStyle(),
     defaultVisible: optionShow,

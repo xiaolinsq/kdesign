@@ -12,22 +12,6 @@
   cursor: pointer;
   background: @cascader-bg-color;
 
-  &:focus > &-input {
-    border-color: @cascader-active-color;
-
-    .@{kd-prefix}-input-suffix,
-    i[class*='kdicon'] {
-      color: @cascader-active-color;
-    }
-  }
-
-  &:hover > &-input {
-    .@{kd-prefix}-input-suffix,
-    i[class*='kdicon'] {
-      color: @cascader-active-color;
-    }
-  }
-
   &.disabled {
     .@{cascader-picker-prefix-cls}-input {
       cursor: not-allowed;
@@ -54,7 +38,7 @@
   }
 
   &-input {
-    background-color: transparent !important;
+    background-color: transparent;
     transition: all 0.2s;
 
     > input {
@@ -63,10 +47,7 @@
     }
 
     &.expand {
-      border-color: @cascader-active-color;
-
       i[class*='kdicon'] {
-        color: @cascader-active-color;
         transform: rotate(180deg);
       }
     }
@@ -105,7 +86,7 @@
     transform: scale(0.9) translateY(-50%);
 
     &:hover {
-      color: @cascader-active-color;
+      color: @cascader-clear-color-hover;
     }
   }
 }
@@ -163,12 +144,12 @@
       }
 
       &-label {
-        width: 72px;
+        width: @cascader-menu-item-label-width;
         .ellipsis;
       }
 
       &.last .@{cascader-menu-prefix-cls}-item-label {
-        width: 92px;
+        width: calc(@cascader-menu-item-label-width + 20px);
       }
 
       .@{kd-prefix}-cascader-checkbox {
@@ -199,11 +180,12 @@
 
     .@{kd-prefix}-cascader-suffix {
       right: 9px;
+      top: 50%;
+      transform: translateY(-50%);
     }
   }
 
   &-multiple {
-    padding: 1px 28px 1px 0;
     transition: all 0.3s cubic-bezier(0.645, 0.045, 0.355, 1);
     width: 100%;
     min-height: 30px;
@@ -212,11 +194,15 @@
     display: flex;
     cursor: pointer;
     box-sizing: border-box;
-    overflow-y: auto;
     overflow-x: hidden;
     position: relative;
     border-bottom: 1px solid #d9d9d9;
     background: @cascader-bg-color;
+
+    &:not(.@{kd-prefix}-cascader-disabled):focus {
+      border-color: @cascader-selected-color;
+      outline: none;
+    }
   }
 
   &-multiple-wrapper {
@@ -224,11 +210,14 @@
     align-items: center;
     flex-wrap: wrap;
     width: 100%;
+    padding: 1px 28px 1px 0;
+    overflow-y: auto;
   }
 
   &-placeholder {
     position: absolute;
-    color: @select-placeholder-color;
+    font-size: @middle-font-size;
+    color: @cascader-placeholder-color;
     overflow: hidden;
     white-space: nowrap;
     text-overflow: ellipsis;
@@ -267,10 +256,6 @@
         transform: rotate(0deg);
         transition: transform calc(@transition-duration - 0.1s) @ease;
       }
-
-      &-focus {
-        color: @cascader-g-color-border-foucs;
-      }
     }
 
     &-clear {
@@ -285,6 +270,7 @@
       }
     }
   }
+
   &-tag {
     &-describe {
       font-size: 12px;
@@ -296,7 +282,6 @@
       &-content {
         display: inline-flex;
         align-items: center;
-        vertical-align: middle;
         padding: 0 7px;
         overflow: hidden;
         white-space: nowrap;
@@ -305,5 +290,44 @@
         color: #212121;
       }
     }
+  }
+
+  &-disabled {
+    cursor: not-allowed;
+
+    .@{kd-prefix}-cascader-picker-label {
+      color: @cascader-disabled-color;
+    }
+
+    .@{kd-prefix}-cascader-picker-input {
+      background-color: @cascader-disabled-color-background;
+
+      > input {
+        background-color: @cascader-disabled-color-background;
+      }
+    }
+
+    &.@{kd-prefix}-cascader-multiple {
+      background-color: @cascader-disabled-color-background;
+    }
+
+    .@{kd-prefix}-cascader-suffix {
+      color: @cascader-disabled-color;
+    }
+
+    .@{kd-prefix}-cascader-tag-describe-content {
+      color: @cascader-tag-disabled-color;
+      border-color: @cascader-tag-disabled-color;
+    }
+  }
+
+  &-picker:not(&-disabled):hover, &-expand {
+    .kd-input-wrapper {
+      border-color: @cascader-g-color-border-focus;
+    }
+  }
+
+  &-multiple:not(&-disabled):hover, &-expand {
+    border-color: @cascader-g-color-border-focus;
   }
 }

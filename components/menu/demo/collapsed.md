@@ -8,9 +8,9 @@ import React from 'react'
 import ReactDOM from 'react-dom'
 import { Menu, Button, Icon } from '@kdcloudjs/kdesign'
 
-function Demo() {
-  const [collapsed, setCollapsed] = React.useState(true)
-  const [collapsedInline, setCollapsedInline] = React.useState(true)
+const Demo: React.FC = () => {
+  const [collapsed, setCollapsed] = React.useState<boolean>(true)
+  const [collapsedInline, setCollapsedInline] = React.useState<boolean>(true)
 
   const handleMouseEnter = () => {
     console.log('handleMouseEnter')
@@ -33,7 +33,6 @@ function Demo() {
         {collapsed ? '展开' : '收起'}
       </Button>
       <Menu
-        name="Menu"
         style={{ marginTop: '20px', border: '1px solid #f0f0f0' }}
         collapsed={collapsed}
         onMouseEnter={handleMouseEnter}

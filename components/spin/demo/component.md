@@ -10,10 +10,10 @@ import React from 'react'
 import ReactDOM from 'react-dom'
 import { Spin } from '@kdcloudjs/kdesign'
 
-function Demo() {
+const Demo: React.FC = () => {
   return (
     <>
-      <Spin name="Spin" type="component" />
+      <Spin type="component" />
     </>
   )
 }

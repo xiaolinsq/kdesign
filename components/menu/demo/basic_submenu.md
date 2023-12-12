@@ -7,7 +7,7 @@ order: 0
 import React from 'react'
 import ReactDOM from 'react-dom'
 import { Menu } from '@kdcloudjs/kdesign'
-function Demo() {
+const Demo: React.FC = () => {
   const handleClickItem = (obj) => {
     console.log(obj)
   }
@@ -18,7 +18,7 @@ function Demo() {
 
   return (
     <>
-      <Menu name="Menu" style={menuStyle} onClick={handleClickItem} inlineIndent={24}>
+      <Menu style={menuStyle} onClick={handleClickItem} inlineIndent={24}>
         <Menu.Item key="1" name="MenuItem" disabled>
           标签一
         </Menu.Item>

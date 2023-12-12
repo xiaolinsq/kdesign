@@ -91,6 +91,7 @@ const InternalTreeSelect: React.ForwardRefRenderFunction<ITreeSelectProps<TreeSe
     dropdownRender,
     onlyExpandOnClickIcon,
     listHeight,
+    status,
   } = treeSelectProps
   const isMultiple = mode === 'multiple' // 是否多选
   const [initValue, setInitValue] = useMergedState(isMultiple ? [] : undefined, {
@@ -137,6 +138,7 @@ const InternalTreeSelect: React.ForwardRefRenderFunction<ITreeSelectProps<TreeSe
     [`${selectPrefixCls}-borderless`]: borderType === 'none',
     [`${selectPrefixCls}-size-${size}`]: size,
     [`${selectPrefixCls}-wrapper`]: true,
+    [`${selectPrefixCls}-error`]: status === 'error',
   })
 
   useEffect(() => {
@@ -154,7 +156,7 @@ const InternalTreeSelect: React.ForwardRefRenderFunction<ITreeSelectProps<TreeSe
       if (TreeMap.has(initValue)) {
         arr.push(TreeMap.get(initValue))
       } else {
-        typeof initValue !== undefined && arr.push({ key: initValue, title: initValue })
+        ;(initValue ?? '') !== '' && arr.push({ key: initValue, title: initValue })
       }
     }
     setSelectTreeNodes(arr)
@@ -355,6 +357,10 @@ const InternalTreeSelect: React.ForwardRefRenderFunction<ITreeSelectProps<TreeSe
     }
   }, [showSearch, autoFocus, disabled])
 
+  useEffect(() => {
+    setSelectedKeys(initValue)
+  }, [initValue])
+
   // 渲染下拉列表框
   const renderContent = () => {
     const dropDownStyle = Object.assign({ width: style?.width, maxHeight: virtual ? 'unset' : '' }, dropdownStyle)
@@ -453,6 +459,7 @@ const InternalTreeSelect: React.ForwardRefRenderFunction<ITreeSelectProps<TreeSe
                         disabled={disabled}
                         onClose={(e) => handleRemove(e, key)}
                         data-tag={key}
+                        title={label}
                       >
                         {label}
                       </Tag>

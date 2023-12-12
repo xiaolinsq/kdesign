@@ -7,10 +7,11 @@ order: 1
 import React from 'react'
 import ReactDOM from 'react-dom'
 import { Carousel } from '@kdcloudjs/kdesign'
+import type { DotPositionType } from '@kdcloudjs/kdesign'
 
-function Demo() {
+const Demo: React.FC = () => {
   const carouselRef = React.useRef()
-  const [dotPosition, setDotPosition] = React.useState('bottom')
+  const [dotPosition, setDotPosition] = React.useState<DotPositionType>('bottom')
   React.useEffect(() => {
     if (!carouselRef.current) return
     carouselRef.current.getRef().parentNode.style.display = 'flex'
@@ -33,7 +34,6 @@ function Demo() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', flex: '1' }}>
       <Carousel
-        name="Carousel"
         dotPosition={dotPosition}
         ref={carouselRef}
         autoplay={true}

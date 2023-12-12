@@ -8,7 +8,7 @@ import React from 'react'
 import ReactDOM from 'react-dom'
 import { Collapse, Icon } from '@kdcloudjs/kdesign'
 
-function Demo() {
+const Demo: React.FC = () => {
   const collapseRef = React.useRef()
   React.useEffect(() => {
     if (collapseRef.current)
@@ -16,7 +16,6 @@ function Demo() {
   }, [collapseRef.current])
   return (
     <Collapse
-      name="Collapse"
       ref={collapseRef}
       expandIcon={() => {
         return <Icon type="arrow-right"></Icon>

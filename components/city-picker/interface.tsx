@@ -6,6 +6,7 @@ export type City = {
   country?: string
   province?: string
   name?: string
+  type?: 'domestic' | 'foreign'
   [key: string]: any
 }
 
@@ -40,7 +41,7 @@ export interface CityPickerProps {
   clearIcon?: React.ReactNode // 清除图标
   suffixIcon?: React.ReactNode // 选择框后缀图标
   optionHighlightProps?: string // 搜索时 根据该属性值高亮城市名
-  value?: string | number
+  value?: string | number | City
   defaultValue?: string | number
   description?: React.ReactNode
   showDescription?: boolean
@@ -50,6 +51,7 @@ export interface CityPickerProps {
   onSearch?: (value: string) => void
   onClear?: () => void
   itemRender?: (city: City) => React.ReactNode
+  onTabPaneChange?: (id: Type) => void
 }
 
 export interface ICityPickerOptionProps {
@@ -59,7 +61,10 @@ export interface ICityPickerOptionProps {
   children?: React.ReactNode
   className?: string
   style?: React.CSSProperties
+  activeIndex?: number
+  index: number
   onChangeSelect?: (city: City | null) => void
   renderCityInfo?: (city: City, flag?: boolean, symbol?: string) => React.ReactNode
   itemRender?: (city: City) => React.ReactNode
+  onChangeActiveIndex?: (index: number) => void
 }

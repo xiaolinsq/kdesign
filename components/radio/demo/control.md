@@ -10,11 +10,11 @@ import React from 'react'
 import ReactDOM from 'react-dom'
 import { Radio } from '@kdcloudjs/kdesign'
 
-function Demo() {
-  const [v, setV] = React.useState('AAAA')
+const Demo: React.FC = () => {
+  const [v, setV] = React.useState<string>('AAAA')
   return (
     <div style={{ width: '350px' }}>
-    <Radio.Group name="radiogroup" value={v}>
+    <Radio.Group value={v}>
       <Radio value={'AAAA'}>A</Radio>
       <Radio value={'BBBB'}>B</Radio>
       <Radio value={'CCCC'}>C</Radio>

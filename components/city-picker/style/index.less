@@ -14,6 +14,9 @@
   display: flex;
   flex-direction: column;
 
+  &-selector {
+    width: 100%;
+  }
   &-selector:hover {
     .@{city-picker-prefix-cls}-icon-active {
       color: #3761ca;
@@ -55,8 +58,10 @@
       opacity: 0;
       z-index: 1;
       position: absolute;
+      top: 0;
       background: #fff;
       transition: opacity 0.15s ease;
+      font-size: @city-picker-clear-font-size;
       &:hover {
         color: @city-picker-g-color-border-hover;
       }
@@ -71,6 +76,10 @@
     text-overflow: ellipsis;
     right: 24px;
     left: 0;
+    top: 0;
+    bottom: 0;
+    display: flex;
+    align-items: center;
   }
 
   &-borderless {
@@ -159,6 +168,11 @@
         &-type-line {
           padding: 0 12px;
           font-size: 12px;
+
+          .@{kd-prefix}-tab-pane-text {
+            .over();
+            width: 100%;
+          }
         }
       }
     }
@@ -194,34 +208,45 @@
       align-items: center;
       justify-content: center;
     }
+
+    &.topLeft.hidden,
+    &.bottomLeft.hidden,
+    &.topRight.hidden,
+    &.bottomRight.hidden {
+      opacity: 0;
+      visibility: hidden;
+      transition: all calc(@transition-duration - 0.1s) @ease;
+    }
   }
 
   &-list {
     padding: 8px 0;
     max-height: 320px;
     overflow-y: auto;
+    box-sizing: content-box;
 
     // 下拉列表选项
     &-item {
+      .over();
       .item();
-      display: flex;
       cursor: pointer;
-
-      &-content {
-        .over();
-      }
 
       &-info {
         color: @city-picker-placeholder-color;
         white-space: nowrap;
       }
 
-      &:hover {
+      &-active:not(&-disabled) {
         background-color: @city-picker-item-active-bg;
       }
 
       &-selected:not(&-disabled) {
         background-color: @city-picker-item-selected-bg;
+        color: @city-picker-list-item-color-selected;
+
+        .@{city-picker-prefix-cls}-list-item-info {
+          color: @city-picker-list-item-color-selected;
+        }
       }
 
       &-disabled {
@@ -230,10 +255,17 @@
         background-color: @city-picker-disabled-option-bg;
       }
     }
+
+    & > .@{city-picker-prefix-cls}-list-item-match {
+      color: @city-picker-font-color;
+      .@{city-picker-prefix-cls}-list-item-info {
+        color: @city-picker-placeholder-color;
+      }
+    }
   }
 
   &-highlight {
-    color: #5582f3;
+    color: @city-picker-highlight-color;
   }
 
   // 选择器框大小
@@ -251,6 +283,8 @@
 
   &-suffix {
     right: 0;
+    top: 0;
+    bottom: 0;
     position: absolute;
     display: flex;
     flex: 0;
@@ -264,7 +298,7 @@
   &-focused {
     .focusColor();
 
-    .@{city-picker-prefix-cls}-content-item {
+    .@{city-picker-prefix-cls}-content-item:not(.@{city-picker-prefix-cls}-content-item-seleted) {
       color: @city-picker-placeholder-color;
     }
   }
@@ -319,14 +353,5 @@
       color: @city-picker-placeholder-color;
       .over();
     }
-  }
-
-  &.topLeft.hidden,
-  &.bottomLeft.hidden,
-  &.topRight.hidden,
-  &.bottomRight.hidden {
-    opacity: 0;
-    visibility: hidden;
-    transition: all calc(@transition-duration - 0.1s) @ease;
   }
 }

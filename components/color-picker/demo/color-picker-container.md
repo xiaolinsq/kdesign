@@ -1,6 +1,6 @@
 ---
 title: 配置拾色容器
-order: 6
+order: 7
 ---
 
 可配置属性 showColorPickerBox 控制拾色容器的显隐
@@ -10,8 +10,8 @@ import React from 'react'
 import ReactDOM from 'react-dom'
 import { ColorPicker } from '@kdcloudjs/kdesign'
 
-function Demo() {
-  const onChange = (inputValue) => {
+const Demo: React.FC = () => {
+  const onChange = (inputValue: string) => {
     console.log('color', inputValue)
   }
 
