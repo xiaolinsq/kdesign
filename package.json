@@ -1,6 +1,6 @@
 {
   "name": "@kdcloudjs/kdesign",
-  "version": "1.7.67",
+  "version": "1.8.11",
   "description": "KDesign 金蝶前端react 组件库",
   "title": "kdesign",
   "keywords": [
@@ -16,11 +16,11 @@
   ],
   "homepage": "https://react.kingdee.design/",
   "bugs": {
-    "url": "https://github.com/kdcloudone/kdesign/issues"
+    "url": "https://github.com/kingdee/kdesign/issues"
   },
   "repository": {
     "type": "git",
-    "url": "git@github.com:kdcloudone/kdesign.git"
+    "url": "git@github.com:kingdee/kdesign.git"
   },
   "contributors": [
     "kdesign"
@@ -59,9 +59,9 @@
     "test:coverage": "npm run test -- --coverage",
     "test:update": "jest --cache=false -u",
     "changelog": "conventional-changelog -p angular -i CHANGELOG.md -s -r 0 && node scripts/filter-changelog.js",
-    "pub": "npm run test:all && npm run build && cross-env PUB_ENV=pub np --no-cleanup --no-tests",
+    "pub": "npm run test:all && cross-env PUB_ENV=pub np --no-publish --no-tests --no-cleanup && npm run build && npm publish",
     "pub:beta": "npm run test:all && npm run build && cross-env PUB_ENV=pub np --no-cleanup --anyBranch --no-tests --tag=beta",
-    "prepublishOnly": "node scripts/guard.js",
+    "pub:usePopper": "npm run test:all && npm run build && cross-env PUB_ENV=pub np --no-cleanup --anyBranch --no-tests --tag=usePopper",
     "new": "node scripts/create-component.js",
     "token": "node scripts/generate-token.js",
     "preinstall": "npx force-resolutions"
@@ -78,11 +78,10 @@
     "@babel/runtime-corejs3": "^7.11.2",
     "@babel/standalone": "^7.14.3",
     "@kdcloudjs/kdesign-icons": "^1.0.5",
-    "@kdcloudjs/table": "1.2.0-canary.16",
-    "@popperjs/core": "^2.5.4",
+    "@kdcloudjs/table": "1.2.1-canary.7",
+    "@popperjs/core": "^2.11.8",
     "@types/js-cookie": "^3.0.3",
     "async-validator": "^3.5.1",
-    "axios": "^0.21.1",
     "big.js": "^6.0.2",
     "classnames": "^2.2.6",
     "color": "^4.2.3",
@@ -96,7 +95,7 @@
     "qrcode.react-ie": "^3.1.3",
     "react-color": "^2.19.3",
     "react-draggable": "^4.4.3",
-    "react-popper": "^2.2.3",
+    "react-popper": "^2.3.0",
     "resize-observer-polyfill": "^1.5.1",
     "styled-components": "^5.2.1"
   },
@@ -114,6 +113,9 @@
     "@babel/preset-react": "^7.10.4",
     "@babel/preset-typescript": "^7.10.4",
     "@commitlint/config-conventional": "^9.1.2",
+    "@testing-library/jest-dom": "^6.4.2",
+    "@testing-library/react": "^12.1.2",
+    "@testing-library/user-event": "^14.5.2",
     "@types/babel__traverse": "7.17.1",
     "@types/big.js": "^6.0.0",
     "@types/classnames": "^2.2.10",
@@ -144,6 +146,7 @@
     "core-js": "^3.19.1",
     "cross-env": "^7.0.2",
     "css-loader": "^4.2.1",
+    "cssnano": "4.x",
     "cz-customizable": "^6.3.0",
     "dekko": "^0.2.1",
     "enzyme": "^3.11.0",
@@ -190,6 +193,7 @@
     "mini-css-extract-plugin": "^0.10.0",
     "mockdate": "^3.0.2",
     "mq-polyfill": "^1.1.8",
+    "mutation-observer": "^1.0.3",
     "node-fetch": "^2.6.1",
     "np": "^6.5.0",
     "nunjucks": "^3.2.3",
@@ -209,6 +213,7 @@
     "stylelint-config-prettier": "^8.0.2",
     "stylelint-config-standard": "^20.0.0",
     "stylelint-declaration-block-no-ignored-properties": "^2.3.0",
+    "terser-webpack-plugin": "4.x",
     "through2": "^4.0.2",
     "ts-jest": "^26.4.0",
     "typescript": "~3.9.2",

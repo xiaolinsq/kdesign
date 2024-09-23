@@ -2,7 +2,7 @@
 感谢你的宝贵时间，我们很高兴您有兴趣为 KDesign 做出贡献。此篇文档旨在帮助 开发者 在新组件开发上提供帮助
 
 ## 克隆仓库
-1. 通过 [https://github.com/kdcloudone/kdesign](https://github.com/kdcloudone/kdesign) 访问我们的仓库，然后 Fork 此仓库到你的 Repositories。
+1. 通过 [https://github.com/kingdee/kdesign](https://github.com/kingdee/kdesign) 访问我们的仓库，然后 Fork 此仓库到你的 Repositories。
 2. 进入你的 Repositories 里面，找到 Fork 的 KDesign 项目，使用 `git clone` 指令克隆项目到你本地。
 
 ## 新组件开发
@@ -85,7 +85,7 @@ export default Button
 + const buttonLangMsg = locale.getCompLangMsg({ componentName: 'Button' })
 ```
 
-进行国际化前你需要现在 `components/locale/zh-CN.tsx` 文件内定义 Button 组件，比如定义 Button.text 然后你就可以使用 `buttonLangMsg.text` 进行赋值操作
+进行国际化前你需要先在 `components/locale/zh-CN.tsx` 文件内定义 Button 组件，比如定义 Button.text 然后你就可以使用 `buttonLangMsg.text` 进行赋值操作
 
 ### 2. 样式文件说明
 KDesign 使用less作为css预处理器，创建模板内的 style 文件夹存放的就是所有的样式文件。
@@ -197,7 +197,7 @@ KDesign 的demo采用实时编译，用户可以直接在编辑器中编辑代�
 - order: demo的排序规则
   - 文档在页面中的呈现顺序按照order正序排列
 - jsx代码示例是固定的模板，大家不需要对模板的主体结构进行修改 只需要修改Demo组件中的代码即可。
-- 对于需要使用其他npm包来演示代码的，KDesign也提供了 `lodash`、`date-fns`、 `axios`来进行演示，具体使用办法如下:
+- 对于需要使用其他npm包来演示代码的，KDesign也提供了 `lodash`、`date-fns`、 `fetch`来进行演示，具体使用办法如下:
 
 ```diff
 + import _ from 'lodash'

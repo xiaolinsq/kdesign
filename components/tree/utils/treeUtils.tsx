@@ -531,7 +531,7 @@ export const getDataCheckededState = (
 }
 
 export const getDataCheckededStateStrictly = (checkedKeys: string[]) => {
-  const _checkedKeys = [...checkedKeys]
+  const _checkedKeys = [...(checkedKeys || [])]
   return { checkedKeys: Array.from(new Set(_checkedKeys)), halfCheckedKeys: [] }
 }
 
@@ -589,7 +589,8 @@ export const getInitExpandedKeys = (
   searchStatus: SearchStatus,
   expandOnFilterNode: boolean,
 ) => {
-  let keys: string[] = expandedKeys?.concat(expandScrollkeys) || defaultExpandedKeys?.concat(expandScrollkeys) || []
+  let keys: string[] =
+    expandedKeys?.concat(expandScrollkeys) || defaultExpandedKeys?.concat(expandScrollkeys) || expandScrollkeys
   if (isInit) {
     if (defaultExpandAll) {
       keys = getAllNodeKeys(data)
