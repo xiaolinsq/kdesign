@@ -40,6 +40,8 @@ export const Triggers = tuple('hover', 'focus', 'click', 'contextMenu')
 
 export type TriggerType = typeof Triggers[number]
 
+export type Reason = TriggerType | 'scroll' | 'clickOutside' | 'parentHidden' | 'unknown'
+
 export type RenderFunction = () => React.ReactNode
 
 export type PopperProps = {
@@ -60,13 +62,15 @@ export type PopperProps = {
   style?: React.CSSProperties
   popperClassName?: string
   popperStyle?: React.CSSProperties
+  popperOuterClassName?: string
+  popperOuterStyle?: React.CSSProperties
   placement?: PlacementType
   tip?: any
   trigger?: TriggerType | Array<TriggerType>
   strategy?: 'fixed' | 'absolute'
   clickToClose?: boolean
   onTrigger?: (trigger: TriggerType) => void
-  onVisibleChange?: (visible: boolean) => void
+  onVisibleChange?: (visible: boolean, reason?: Reason) => void
   getTriggerElement?: (locatorNode: HTMLElement) => HTMLElement
   getPopupContainer?: (locatorNode: HTMLElement) => HTMLElement
   onTransitionEnd?: (e: React.TransitionEvent) => void
@@ -158,6 +162,8 @@ export const Popper = forwardRef<unknown, PopperProps>((props, ref) => {
     onVisibleChange,
     className,
     popperClassName,
+    popperOuterClassName,
+    popperOuterStyle,
     tip,
     disabled = false,
     trigger = 'click',
@@ -165,7 +171,8 @@ export const Popper = forwardRef<unknown, PopperProps>((props, ref) => {
     strategy = 'absolute',
     visible,
     arrowSize = 4.25,
-    gap: defaultGap = 4,
+    arrowOffset = 12,
+    gap: defaultGap = 8,
     scrollHidden = false,
     mouseEnterDelay = 0.1,
     mouseLeaveDelay = 0.1,
@@ -188,6 +195,28 @@ export const Popper = forwardRef<unknown, PopperProps>((props, ref) => {
   const popperElement = getElement(tip)
   const referenceElement: any = Children.only(childrenInner) as ReactElement
 
+  const arrowOffsetInner = arrowSize + arrowOffset
+  const getArrowOffset = (popperSize: number, referenceSize: number, arr: string[]) => {
+    const boundary = arrowOffsetInner * 2
+    let offset: any
+
+    if (referenceSize < boundary || popperSize < boundary) {
+      const o = Math.min(referenceSize, popperSize) / 2
+      if (arr[1] === 'start') {
+        offset = o
+      } else {
+        offset = Math.max(popperSize - o, 0)
+      }
+    } else {
+      if (arr[1] === 'start') {
+        offset = arrowOffsetInner
+      } else {
+        offset = popperSize - arrowOffsetInner
+      }
+    }
+
+    return offset
+  }
   const id = useId()
   const parentContext = useContext(TriggerContext)
   const subPopupRefs = useRef<Record<string, any>>({})
@@ -225,7 +254,7 @@ export const Popper = forwardRef<unknown, PopperProps>((props, ref) => {
       delayRef.current = null
     }
   }
-  const changeVisible = (nextOpen: boolean, triggerType = '') => {
+  const changeVisible = (nextOpen: boolean, triggerType: Reason = 'unknown') => {
     if (visibleInner !== nextOpen) {
       if (nextOpen && triggerTypeArray.includes(triggerType)) {
         onTrigger?.(triggerType as TriggerType)
@@ -233,17 +262,17 @@ export const Popper = forwardRef<unknown, PopperProps>((props, ref) => {
       if (typeof visible === 'undefined') {
         setVisibleInner(nextOpen)
       }
-      onVisibleChange?.(nextOpen)
+      onVisibleChange?.(nextOpen, triggerType)
     }
     if (!nextOpen && Object.keys(subPopupRefs.current || {}).length) {
       Object.values(subPopupRefs.current).forEach((d: any) => {
         if (typeof d?.triggerOpen === 'function' && d?.visible) {
-          d?.triggerOpen(false)
+          d?.triggerOpen(false, 'parentHidden')
         }
       })
     }
   }
-  const triggerOpen = (nextOpen: boolean, triggerType = '', delay = 0) => {
+  const triggerOpen = (nextOpen: boolean, triggerType: Reason = 'unknown', delay = 0) => {
     clearDelay()
     if (!disabled) {
       if (delay === 0) {
@@ -384,21 +413,25 @@ export const Popper = forwardRef<unknown, PopperProps>((props, ref) => {
   }, [visibleInner, scrollHidden, popperRefDom])
 
   useEffect(() => {
-    const clickHandle = debounce((e: MouseEvent) => {
-      if (visibleInner) {
-        const isPopper = popperRefDom.current
-          ? popperRefDom.current === e.target || popperRefDom.current.contains?.(e.target)
-          : false
+    const clickHandle = debounce(
+      (e: MouseEvent) => {
+        if (visibleInner) {
+          const isPopper = popperRefDom.current
+            ? popperRefDom.current === e.target || popperRefDom.current.contains?.(e.target)
+            : false
 
-        const domReference = getRealDom(referenceRef, referenceElement)
-        const isReference = domReference ? domReference === e.target || domReference?.contains?.(e.target) : false
-        const isTarget = trigger === 'contextMenu' ? isPopper : isPopper || isReference
+          const domReference = getRealDom(referenceRef, referenceElement)
+          const isReference = domReference ? domReference === e.target || domReference?.contains?.(e.target) : false
+          const isTarget = trigger === 'contextMenu' ? isPopper : isPopper || isReference
 
-        if (clickToClose && !isTarget && !isSubPopper(e)) {
-          triggerOpen(false, 'clickOutside', 0)
+          if (clickToClose && !isTarget && !isSubPopper(e)) {
+            triggerOpen(false, 'clickOutside', 0)
+          }
         }
-      }
-    }, 10)
+      },
+      10,
+      { leading: true },
+    )
 
     if (visibleInner) {
       document.addEventListener('click', clickHandle, true)
@@ -437,7 +470,7 @@ export const Popper = forwardRef<unknown, PopperProps>((props, ref) => {
     },
     {
       name: 'preventOverflow',
-      enabled: autoPlacement,
+      enabled: autoPlacement && !placementInner.includes('-'),
       options: {
         mainAxis: true,
       },
@@ -447,6 +480,50 @@ export const Popper = forwardRef<unknown, PopperProps>((props, ref) => {
       enabled: autoPlacement,
       options: {
         fallbackPlacements: Array.isArray(autoPlacementList) ? getFallbackPlacementList(autoPlacementList) : undefined,
+      },
+    },
+    {
+      name: 'applyArrowOffset',
+      enabled: true,
+      phase: 'write',
+      fn(data: any) {
+        const {
+          elements: { arrow },
+          placement,
+          rects: { popper, reference },
+        } = data.state
+        if (arrow) {
+          const arr = placement.split('-')
+          let offset: any
+          if (arr.length === 2) {
+            switch (arr[0]) {
+              case 'bottom':
+                offset = getArrowOffset(popper.width, reference.width, arr)
+                if (offset) {
+                  arrow.style.transform = `translate(${offset}px, 0px)`
+                }
+                break
+              case 'left':
+                offset = getArrowOffset(popper.height, reference.height, arr)
+                if (offset) {
+                  arrow.style.transform = `translate(0px, ${offset}px)`
+                }
+                break
+              case 'right':
+                offset = getArrowOffset(popper.height, reference.height, arr)
+                if (offset) {
+                  arrow.style.transform = `translate(0px, ${offset}px)`
+                }
+                break
+              default:
+                offset = getArrowOffset(popper.width, reference.width, arr)
+                if (offset) {
+                  arrow.style.transform = `translate(${offset}px, 0px)`
+                }
+                break
+            }
+          }
+        }
       },
     },
     {
@@ -523,8 +600,8 @@ export const Popper = forwardRef<unknown, PopperProps>((props, ref) => {
 
   const popperContainerProps = {
     ref: popperRefDom,
-    style: { ...(arrow ? arrowStyle : {}) },
-    className: classnames(popperPrefixCls, { hidden: !visibleInner }),
+    style: { ...(arrow ? arrowStyle : {}), ...popperOuterStyle },
+    className: classnames(popperPrefixCls, { hidden: !visibleInner }, popperOuterClassName),
   }
 
   const popperProps = {
